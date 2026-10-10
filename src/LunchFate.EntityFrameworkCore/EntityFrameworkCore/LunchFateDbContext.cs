@@ -94,7 +94,9 @@ public class LunchFateDbContext :
             b.Property(x => x.Rating).HasPrecision(3, 1);
             b.Property(x => x.Tags).HasMaxLength(ShopConsts.MaxTagsLength);
             b.Property(x => x.Remark).HasMaxLength(ShopConsts.MaxRemarkLength);
-            b.HasIndex(x => x.Name); //需求文档 §3.2：同名（未删除）唯一查询
+            //需求文档 §3.2：同名（未删除）唯一；用过滤唯一索引在库级兜底，
+            //过滤条件允许软删除数据保留同名历史（FR-S-04）
+            b.HasIndex(x => x.Name).IsUnique().HasFilter("IsDeleted = 0");
         });
 
         //builder.Entity<YourEntity>(b =>

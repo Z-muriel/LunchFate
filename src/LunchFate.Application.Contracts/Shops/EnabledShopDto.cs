@@ -8,11 +8,15 @@ namespace LunchFate.Shops;
 /// </summary>
 public class EnabledShopDto : EntityDto<Guid>
 {
+    /// <summary>店铺名称。</summary>
     public string Name { get; set; } = default!;
 
+    /// <summary>店铺分类。</summary>
     public ShopCategory Category { get; set; }
 
+    /// <summary>人均价格（元）。</summary>
     public decimal AveragePrice { get; set; }
 
+    /// <summary>地址，可空。</summary>
     public string? Address { get; set; }
 }

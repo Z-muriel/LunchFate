@@ -131,6 +131,43 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         (await _shopAppService.GetEnabledListAsync()).Items.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task Should_Fallback_To_Name_Asc_When_Sorting_Not_Whitelisted()
+    {
+        await _shopAppService.CreateAsync(NewShop("B 店"));
+        await _shopAppService.CreateAsync(NewShop("A 店"));
+
+        //非法排序字段必须回退为按名称升序（动态排序白名单，防止注入）
+        var fallback = await _shopAppService.GetListAsync(new ShopSearchInput
+        {
+            Sorting = "Name; DROP TABLE AppShops --",
+            MaxResultCount = 100
+        });
+        fallback.Items.Select(x => x.Name).ToArray().ShouldBe(new[] { "A 店", "B 店" });
+
+        //白名单内的合法降序排序应生效
+        var descending = await _shopAppService.GetListAsync(new ShopSearchInput
+        {
+            Sorting = "Name desc",
+            MaxResultCount = 100
+        });
+        descending.Items.Select(x => x.Name).ToArray().ShouldBe(new[] { "B 店", "A 店" });
+    }
+
+    [Fact]
+    public async Task Should_Cap_Wheel_Shop_Count_At_MaxWheelSize()
+    {
+        for (var i = 0; i < ShopConsts.MaxWheelSize + 1; i++)
+        {
+            await _shopAppService.CreateAsync(NewShop($"转盘店铺{i}"));
+        }
+
+        //转盘数据源不得超过扇区数量上限（需求文档 FR-W-07）
+        var wheel = await _shopAppService.GetEnabledListAsync();
+
+        wheel.Items.Count.ShouldBe(ShopConsts.MaxWheelSize);
+    }
+
     private static CreateUpdateShopDto NewShop(
         string name,
         ShopCategory category = ShopCategory.Noodles,

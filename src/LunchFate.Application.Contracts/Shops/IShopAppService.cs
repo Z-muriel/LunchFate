@@ -13,7 +13,7 @@ public interface IShopAppService :
     ICrudAppService<
         ShopDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        ShopSearchInput,
         CreateUpdateShopDto>
 {
     /// <summary>

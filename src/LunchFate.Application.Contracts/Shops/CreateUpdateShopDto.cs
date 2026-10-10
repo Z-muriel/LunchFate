@@ -31,6 +31,7 @@ public class CreateUpdateShopDto
 
     /// <summary>评分 1.0 ~ 5.0、步进 0.5，未评分为 null。</summary>
     [Range(1, 5)]
+    [MultipleOf(0.5)]
     public decimal? Rating { get; set; }
 
     /// <summary>标签，逗号分隔。</summary>

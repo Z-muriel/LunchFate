@@ -2,7 +2,6 @@
 @using System.Globalization
 @using System.Linq
 @using LunchFate.Shops
-@using Volo.Abp
 @inject IShopAppService ShopAppService
 @inject NavigationManager NavigationManager
 @inherits LunchFateComponentBase
@@ -245,14 +244,4 @@
     /// 跳转到店铺管理页（用于空数据引导）。
     /// </summary>
     private void GoToShops() => NavigationManager.NavigateTo("/shops");
-
-    /// <summary>
-    /// 把捕获的异常转换为可展示给用户的提示：
-    /// 服务端返回的用户友好业务异常保留原文，其余一律使用本地化兜底文案，
-    /// 避免把框架内部英文错误直接暴露给用户。
-    /// </summary>
-    /// <param name="ex">捕获到的异常</param>
-    /// <returns>可直接展示的错误提示</returns>
-    private string ToUserMessage(Exception ex) =>
-        ex is UserFriendlyException ? ex.Message : L["Error:Unexpected"].Value;
 }

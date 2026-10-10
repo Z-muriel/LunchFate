@@ -5,7 +5,7 @@
 @using LunchFate.Permissions
 @using LunchFate.Shops
 @using Microsoft.AspNetCore.Authorization
-@using Volo.Abp
+@using Volo.Abp.Authorization
 @inject IShopAppService ShopAppService
 @inherits LunchFateComponentBase
 
@@ -18,9 +18,12 @@
                 <CardTitle>@L["Shops"]</CardTitle>
             </Column>
             <Column ColumnSize="ColumnSize.IsAuto">
-                <button type="button" class="btn btn-primary" @onclick="OpenCreateModal">
-                    @L["NewShop"]
-                </button>
+                @if (_canCreate)
+                {
+                    <button type="button" class="btn btn-primary" @onclick="OpenCreateModal">
+                        @L["NewShop"]
+                    </button>
+                }
             </Column>
         </Row>
     </CardHeader>
@@ -50,7 +53,7 @@
                 </select>
             </Column>
             <Column ColumnSize="ColumnSize.Is3" Class="d-flex align-items-end gap-2">
-                <button type="button" class="btn btn-primary" @onclick="LoadAsync">@L["Search"]</button>
+                <button type="button" class="btn btn-primary" @onclick="ReloadAsync">@L["Search"]</button>
                 <button type="button" class="btn btn-outline-secondary" @onclick="ResetFiltersAsync">@L["Reset"]</button>
             </Column>
         </Row>
@@ -60,14 +63,20 @@
             <div class="alert alert-danger">@_error</div>
         }
 
+        @* 服务端分页：ReadData 每次翻页/排序回调，由应用服务完成筛选、计数、排序与分页 *@
         <DataGrid TItem="ShopDto"
+                  @ref="@_grid"
                   Data="@_items"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="@_total"
                   ShowPager="true"
-                  PageSize="10">
+                  PageSize="10"
+                  Responsive="true">
             <DataGridColumns>
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.Name)"
-                                Caption="@L["Name"]" />
+                                Caption="@L["Name"]"
+                                Sortable="true" />
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.Category)"
                                 Caption="@L["Category"]">
@@ -77,14 +86,16 @@
                 </DataGridColumn>
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.AveragePrice)"
-                                Caption="@L["AveragePrice"]">
+                                Caption="@L["AveragePrice"]"
+                                Sortable="true">
                     <DisplayTemplate>
                         @context.Item.AveragePrice.ToString("0.##")
                     </DisplayTemplate>
                 </DataGridColumn>
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.Rating)"
-                                Caption="@L["Rating"]">
+                                Caption="@L["Rating"]"
+                                Sortable="true">
                     <DisplayTemplate>
                         @(context.Item.Rating.HasValue ? context.Item.Rating.Value.ToString("0.0") : "-")
                     </DisplayTemplate>
@@ -108,16 +119,23 @@
                 </DataGridColumn>
                 <DataGridEntityActionsColumn TItem="ShopDto" @ref="@_actionsColumn">
                     <DisplayTemplate>
+                        @* 操作按钮按权限隐藏：无权限用户不应看到必然失败的入口 *@
                         <EntityActions TItem="ShopDto" EntityActionsColumn="@_actionsColumn">
-                            <EntityAction TItem="ShopDto"
-                                          Text="@L["Edit"]"
-                                          Clicked="() => OpenEditModal(context.Item)" />
-                            <EntityAction TItem="ShopDto"
-                                          Text="@(context.Item.IsEnabled ? L["Disabled"] : L["Enabled"])"
-                                          Clicked="() => ToggleEnabled(context.Item)" />
-                            <EntityAction TItem="ShopDto"
-                                          Text="@L["Delete"]"
-                                          Clicked="() => AskDelete(context.Item)" />
+                            @if (_canEdit)
+                            {
+                                <EntityAction TItem="ShopDto"
+                                              Text="@L["Edit"]"
+                                              Clicked="() => OpenEditModal(context.Item)" />
+                                <EntityAction TItem="ShopDto"
+                                              Text="@(context.Item.IsEnabled ? L["Disabled"] : L["Enabled"])"
+                                              Clicked="() => ToggleEnabled(context.Item)" />
+                            }
+                            @if (_canDelete)
+                            {
+                                <EntityAction TItem="ShopDto"
+                                              Text="@L["Delete"]"
+                                              Clicked="() => AskDelete(context.Item)" />
+                            }
                         </EntityActions>
                     </DisplayTemplate>
                 </DataGridEntityActionsColumn>
@@ -209,18 +227,20 @@
         </ModalBody>
         <ModalFooter>
             <button type="button" class="btn btn-secondary" @onclick="CloseDeleteModal">@L["Cancel"]</button>
-            <button type="button" class="btn btn-danger" @onclick="DeleteAsync">@L["Delete"]</button>
+            <button type="submit" class="btn btn-danger" @onclick="DeleteAsync">@L["Delete"]</button>
         </ModalFooter>
     </ModalContent>
 </Modal>
 
 @code {
     private IReadOnlyList<ShopDto> _items = Array.Empty<ShopDto>();
+    private int _total;
     private string? _keyword;
     private string _filterCategory = "";
     private string _filterEnabled = "";
     private string? _error;
 
+    private DataGrid<ShopDto>? _grid;
     private Modal? _formModal;
     private Modal? _deleteModal;
     private DataGridEntityActionsColumn<ShopDto>? _actionsColumn;
@@ -239,19 +259,33 @@
     /// <summary>待确认删除的店铺，null 表示删除弹窗未激活。</summary>
     private ShopDto? _deletingItem;
 
+    /// <summary>是否拥有新增店铺权限；用于隐藏"新增店铺"按钮。</summary>
+    private bool _canCreate;
+
+    /// <summary>是否拥有编辑店铺权限；用于隐藏编辑/启停操作。</summary>
+    private bool _canEdit;
+
+    /// <summary>是否拥有删除店铺权限；用于隐藏删除操作。</summary>
+    private bool _canDelete;
+
     /// <summary>
-    /// 初始化：加载店铺列表。
+    /// 初始化：缓存用户的店铺管理权限（服务端各操作另有授权强制校验）。
+    /// 列表数据由 DataGrid 的 ReadData 机制在首次渲染时自动加载。
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await LoadAsync();
+        _canCreate = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Create);
+        _canEdit = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Edit);
+        _canDelete = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Delete);
     }
 
     /// <summary>
-    /// 按当前筛选条件重新加载列表；失败时展示本地化的错误提示。
+    /// DataGrid 服务端分页读取：翻页、排序时由组件回调，
+    /// 调用应用服务完成筛选 → 计数 → 排序 → 分页 → 投影（需求文档 FR-S-01）。
     /// </summary>
-    private async Task LoadAsync()
+    /// <param name="e">DataGrid 读取参数（页码、页大小、排序列）</param>
+    private async Task OnDataGridReadAsync(DataGridReadDataEventArgs<ShopDto> e)
     {
         _error = null;
         try
@@ -268,16 +302,45 @@
                     "false" => false,
                     _ => null
                 },
-                MaxResultCount = 1000,
-                Sorting = nameof(ShopDto.Name)
+                SkipCount = (Math.Max(e.Page, 1) - 1) * e.PageSize,
+                MaxResultCount = e.PageSize,
+                Sorting = ResolveSorting(e.Columns)
             };
 
             var result = await ShopAppService.GetListAsync(input);
             _items = result.Items;
+            _total = (int)result.TotalCount;
         }
         catch (Exception ex)
         {
+            _items = Array.Empty<ShopDto>();
+            _total = 0;
             _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 把 DataGrid 的列排序状态转换为服务端排序表达式（服务端另有白名单校验兜底）。
+    /// </summary>
+    /// <param name="columns">DataGrid 当前列信息</param>
+    /// <returns>形如 "Name desc" 的排序表达式；无排序列时回退为按名称升序</returns>
+    private static string ResolveSorting(IEnumerable<DataGridColumnInfo>? columns)
+    {
+        var sorted = columns?.FirstOrDefault(c => c.SortDirection != SortDirection.Default);
+
+        return sorted == null
+            ? nameof(ShopDto.Name)
+            : $"{sorted.Field} {(sorted.SortDirection == SortDirection.Descending ? "desc" : "asc")}";
+    }
+
+    /// <summary>
+    /// 按当前筛选条件让 DataGrid 重新触发服务端读取。
+    /// </summary>
+    private async Task ReloadAsync()
+    {
+        if (_grid != null)
+        {
+            await _grid.Reload();
         }
     }
 
@@ -289,7 +352,7 @@
         _keyword = null;
         _filterCategory = "";
         _filterEnabled = "";
-        await LoadAsync();
+        await ReloadAsync();
     }
 
     /// <summary>
@@ -359,7 +422,7 @@
             }
 
             await _formModal!.Hide();
-            await LoadAsync();
+            await ReloadAsync();
         }
         catch (Exception ex)
         {
@@ -389,7 +452,7 @@
                 IsEnabled = !item.IsEnabled,
                 Remark = item.Remark
             });
-            await LoadAsync();
+            await ReloadAsync();
         }
         catch (Exception ex)
         {
@@ -428,21 +491,11 @@
             await ShopAppService.DeleteAsync(_deletingItem.Id);
             await _deleteModal!.Hide();
             _deletingItem = null;
-            await LoadAsync();
+            await ReloadAsync();
         }
         catch (Exception ex)
         {
             _error = ToUserMessage(ex);
         }
     }
-
-    /// <summary>
-    /// 把捕获的异常转换为可展示给用户的提示：
-    /// 服务端返回的用户友好业务异常保留原文，其余一律使用本地化兜底文案，
-    /// 避免把框架内部英文错误直接暴露给用户。
-    /// </summary>
-    /// <param name="ex">捕获到的异常</param>
-    /// <returns>可直接展示的错误提示</returns>
-    private string ToUserMessage(Exception ex) =>
-        ex is UserFriendlyException ? ex.Message : L["Error:Unexpected"].Value;
 }

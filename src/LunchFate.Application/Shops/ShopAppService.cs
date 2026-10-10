@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LunchFate.Localization;
 using LunchFate.Permissions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Localization;
 using System.Linq.Dynamic.Core;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -32,14 +29,14 @@ public class ShopAppService : ApplicationService, IShopAppService
     ];
 
     private readonly IRepository<Shop, Guid> _repository;
-    private readonly IStringLocalizer<LunchFateResource> _localizer;
+    private readonly ShopManager _shopManager;
 
     public ShopAppService(
         IRepository<Shop, Guid> repository,
-        IStringLocalizer<LunchFateResource> localizer)
+        ShopManager shopManager)
     {
         _repository = repository;
-        _localizer = localizer;
+        _shopManager = shopManager;
     }
 
     /// <summary>
@@ -56,13 +53,12 @@ public class ShopAppService : ApplicationService, IShopAppService
     /// <summary>
     /// 分页查询店铺列表，支持关键字（名称/标签）、分类与启用状态筛选。
     /// </summary>
-    /// <param name="input">分页与排序入参；页面实际传入 <see cref="ShopSearchInput"/> 以携带筛选条件</param>
+    /// <param name="input">分页、排序与筛选入参</param>
     /// <returns>分页结果</returns>
-    public virtual async Task<PagedResultDto<ShopDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+    public virtual async Task<PagedResultDto<ShopDto>> GetListAsync(ShopSearchInput input)
     {
-        // 1. 解析筛选条件（入参按 ShopSearchInput 向下转换，否则按无筛选处理）
-        var search = input as ShopSearchInput ?? new ShopSearchInput();
-        var keyword = search.Keyword?.Trim();
+        // 1. 解析筛选条件
+        var keyword = input.Keyword?.Trim();
 
         var query = await _repository.GetQueryableAsync();
 
@@ -74,15 +70,15 @@ public class ShopAppService : ApplicationService, IShopAppService
                 (s.Tags != null && s.Tags.Contains(keyword)));
         }
 
-        if (search.Category.HasValue)
+        if (input.Category.HasValue)
         {
-            var category = search.Category.Value;
+            var category = input.Category.Value;
             query = query.Where(s => s.Category == category);
         }
 
-        if (search.IsEnabled.HasValue)
+        if (input.IsEnabled.HasValue)
         {
-            var isEnabled = search.IsEnabled.Value;
+            var isEnabled = input.IsEnabled.Value;
             query = query.Where(s => s.IsEnabled == isEnabled);
         }
 
@@ -91,9 +87,9 @@ public class ShopAppService : ApplicationService, IShopAppService
 
         // 4. 排序 → 分页 → 投影：列表查询在数据库端投影，不加载完整实体
         var items = await AsyncExecuter.ToListAsync(
-            query.OrderBy(SanitizeSorting(search.Sorting))
-                 .Skip(search.SkipCount)
-                 .Take(search.MaxResultCount)
+            query.OrderBy(SanitizeSorting(input.Sorting))
+                 .Skip(input.SkipCount)
+                 .Take(input.MaxResultCount)
                  .Select(s => new ShopDto
                  {
                      Id = s.Id,
@@ -146,24 +142,28 @@ public class ShopAppService : ApplicationService, IShopAppService
     }
 
     /// <summary>
-    /// 新增店铺；名称在未删除数据中必须唯一。
+    /// 新增店铺；名称在未删除数据中必须唯一（领域服务校验，需求文档 §3.2）。
     /// </summary>
     /// <param name="input">新增入参</param>
     /// <returns>创建后的店铺</returns>
     [Authorize(LunchFatePermissions.Shops.Create)]
     public virtual async Task<ShopDto> CreateAsync(CreateUpdateShopDto input)
     {
-        await EnsureNameIsUniqueAsync(input.Name);
+        // 1. 领域服务校验名称唯一并返回规范化名称
+        var name = await _shopManager.EnsureNameIsUniqueAsync(input.Name);
 
+        // 2. 组装聚合根并入库
         var shop = new Shop();
         Apply(input, shop);
+        shop.Name = name;
         await _repository.InsertAsync(shop, autoSave: true);
 
+        // 3. 返回
         return ObjectMapper.Map<Shop, ShopDto>(shop);
     }
 
     /// <summary>
-    /// 更新店铺；名称在未删除数据中必须唯一（排除自身）。
+    /// 更新店铺；名称在未删除数据中必须唯一（排除自身，需求文档 §3.2）。
     /// </summary>
     /// <param name="id">待更新店铺 Id</param>
     /// <param name="input">更新入参</param>
@@ -171,12 +171,16 @@ public class ShopAppService : ApplicationService, IShopAppService
     [Authorize(LunchFatePermissions.Shops.Edit)]
     public virtual async Task<ShopDto> UpdateAsync(Guid id, CreateUpdateShopDto input)
     {
+        // 1. 加载聚合根并校验名称唯一（排除自身）
         var shop = await _repository.GetAsync(id);
-        await EnsureNameIsUniqueAsync(input.Name, id);
+        var name = await _shopManager.EnsureNameIsUniqueAsync(input.Name, id);
 
+        // 2. 应用入参并保存
         Apply(input, shop);
+        shop.Name = name;
         await _repository.UpdateAsync(shop, autoSave: true);
 
+        // 3. 返回
         return ObjectMapper.Map<Shop, ShopDto>(shop);
     }
 
@@ -193,12 +197,12 @@ public class ShopAppService : ApplicationService, IShopAppService
 
     /// <summary>
     /// 把入参写入聚合根（手工映射，避免 Mapperly 为审计字段生成无意义的映射代码）。
+    /// 名称不在本方法赋值：由调用方使用领域服务校验并规范化后的名称写入。
     /// </summary>
     /// <param name="input">新增/更新入参</param>
     /// <param name="shop">店铺聚合根</param>
     private static void Apply(CreateUpdateShopDto input, Shop shop)
     {
-        shop.Name = input.Name;
         shop.Category = input.Category;
         shop.Address = input.Address;
         shop.Phone = input.Phone;
@@ -230,27 +234,5 @@ public class ShopAppService : ApplicationService, IShopAppService
              tokens[1].Equals("descending", StringComparison.OrdinalIgnoreCase));
 
         return descending ? $"{tokens[0]} descending" : tokens[0];
-    }
-
-    /// <summary>
-    /// 名称唯一性校验：同名且未删除的店铺已存在时抛出用户可读的业务异常。
-    /// </summary>
-    /// <param name="name">待校验的店铺名称</param>
-    /// <param name="excludingId">更新场景下排除的店铺 Id</param>
-    private async Task EnsureNameIsUniqueAsync(string name, Guid? excludingId = null)
-    {
-        var query = await _repository.GetQueryableAsync();
-        query = query.Where(s => s.Name == name);
-
-        if (excludingId.HasValue)
-        {
-            var id = excludingId.Value;
-            query = query.Where(s => s.Id != id);
-        }
-
-        if (await AsyncExecuter.AnyAsync(query))
-        {
-            throw new UserFriendlyException(_localizer["ShopNameDuplicate", name].Value);
-        }
     }
 }

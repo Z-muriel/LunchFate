@@ -2,7 +2,6 @@
   "culture": "en",
   "texts": {
     "AppName": "LunchFate",
-    "Welcome": "Welcome",
 
     "Menu:Home": "Home",
     "Menu:Shops": "Shops",
@@ -13,8 +12,6 @@
     "Permission:Shops.Edit": "Editing the shops",
     "Permission:Shops.Delete": "Deleting the shops",
 
-    "Actions": "Actions",
-    "Close": "Close",
     "Cancel": "Cancel",
     "Save": "Save",
     "Delete": "Delete",
@@ -22,9 +19,6 @@
     "Search": "Search",
     "Reset": "Reset",
     "Name": "Name",
-    "CreationTime": "Creation time",
-    "AreYouSure": "Are you sure?",
-    "AreYouSureToDelete": "Are you sure you want to delete this item?",
 
     "Shops": "Shops",
     "NewShop": "New shop",
@@ -70,7 +64,6 @@
     "Wheel:GoToShops": "Go to shops",
     "Wheel:Category": "Category",
     "Wheel:AveragePrice": "Average price",
-    "Wheel:Address": "Address",
-    "Wheel:LoadFailed": "Failed to load the shops. Please refresh the page."
+    "Wheel:Address": "Address"
   }
 }

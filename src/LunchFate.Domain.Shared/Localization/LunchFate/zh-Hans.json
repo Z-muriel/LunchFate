@@ -2,7 +2,6 @@
   "culture": "zh-Hans",
   "texts": {
     "AppName": "LunchFate",
-    "Welcome": "欢迎",
 
     "Menu:Home": "首页",
     "Menu:Shops": "店铺管理",
@@ -13,8 +12,6 @@
     "Permission:Shops.Edit": "编辑店铺",
     "Permission:Shops.Delete": "删除店铺",
 
-    "Actions": "操作",
-    "Close": "关闭",
     "Cancel": "取消",
     "Save": "保存",
     "Delete": "删除",
@@ -22,9 +19,6 @@
     "Search": "搜索",
     "Reset": "重置",
     "Name": "名称",
-    "CreationTime": "创建时间",
-    "AreYouSure": "确定吗？",
-    "AreYouSureToDelete": "确定要删除该项吗？",
 
     "Shops": "店铺列表",
     "NewShop": "新增店铺",
@@ -70,7 +64,6 @@
     "Wheel:GoToShops": "去添加店铺",
     "Wheel:Category": "分类",
     "Wheel:AveragePrice": "人均",
-    "Wheel:Address": "地址",
-    "Wheel:LoadFailed": "店铺数据加载失败，请刷新页面重试。"
+    "Wheel:Address": "地址"
   }
 }
