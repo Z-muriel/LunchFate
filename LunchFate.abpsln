@@ -1,0 +1,56 @@
+{
+  "id": "86b6e7ad-6a64-41bc-a3a7-0e996831953e",
+  "creationTime": "10/10/2026 02:17:11 +00:00",
+  "template": "app",
+  "versions": {
+    "AbpFramework": "10.6.1",
+    "AbpStudio": "3.1.4",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "LunchFate": {
+      "path": "LunchFate.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "etc/abp-studio/run-profiles/Default.abprun.json"
+    }  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": [
+      
+      ]
+    }
+  },
+  "creatingStudioConfiguration": {
+    "template": "app",
+    "createdAbpStudioVersion": "3.1.4",
+    "creationTool": "ABP Studio UI",
+    "tiered": "false",
+    "runInstallLibs": "",
+    "useLocalReferences": "false",
+    "multiTenancy": "true",
+    "includeTests": "true",
+    "kubernetesConfiguration": "false",
+    "uiFramework": "blazor-webapp",
+    "blazorUiLibrary": "blazorise",
+    "mobileFramework": "none",
+    "distributedEventBus": "none",
+    "databaseProvider": "ef",
+    "runDbMigrator": "",
+    "databaseManagementSystem": "sqlserver",
+    "separateTenantSchema": "false",
+    "createInitialMigration": "",
+    "theme": "basic",
+    "themeStyle": "",
+    "themeMenuPlacement": "",
+    "mobileFramework": "none",
+    "publicWebsite": "false",
+    "socialLogin": "false",
+    "sampleCrudPage": "true",
+    "selectedLanguages": ["Chinese (Simplified)", "English", ],
+    "defaultLanguage": "Chinese (Simplified)",
+    "createCommand": "abp new LunchFate -t app --ui-framework blazor-webapp --blazor-ui-library blazorise --database-provider ef --database-management-system sqlserver --theme basic --skip-migration  --skip-migrator  --without-cms-kit --sample-crud-page --dont-run-install-libs --dont-run-bundling --no-social-logins -no-gdpr -no-openiddict-admin-ui -no-audit-logging -no-file-management -no-language-management -no-text-template-management"
+  }
+}
