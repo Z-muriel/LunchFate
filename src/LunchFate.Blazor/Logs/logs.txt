@@ -16778,3 +16778,634 @@ PermissionRequirement: LunchFate.Authors
 2026-10-10 10:24:21.581 +08:00 [INF] Request finished HTTP/2 POST https://localhost:44352/_blazor/disconnect - 200 0 null 11.379ms
 2026-10-10 10:24:26.920 +08:00 [INF] Application is shutting down...
 2026-10-10 10:24:26.932 +08:00 [DBG] Stopped background worker: Volo.Abp.OpenIddict.Tokens.TokenCleanupBackgroundWorker
+2026-10-10 11:01:52.525 +08:00 [INF] Starting web host.
+2026-10-10 11:01:53.880 +08:00 [DBG] Loaded ABP modules:
+2026-10-10 11:01:53.881 +08:00 [DBG] - LunchFate.Blazor.LunchFateBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - LunchFate.LunchFateApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - LunchFate.LunchFateDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - LunchFate.LunchFateDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AuditLogging.AbpAuditLoggingDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Validation.AbpValidationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Validation.AbpValidationAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Localization.AbpLocalizationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]               - Volo.Abp.VirtualFileSystem.AbpVirtualFileSystemModule
+2026-10-10 11:01:53.881 +08:00 [DBG]               - Volo.Abp.Settings.AbpSettingsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                 - Volo.Abp.Localization.AbpLocalizationAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                 - Volo.Abp.Security.AbpSecurityModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                 - Volo.Abp.Data.AbpDataModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                   - Volo.Abp.ObjectExtending.AbpObjectExtendingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                   - Volo.Abp.Uow.AbpUnitOfWorkModule
+2026-10-10 11:01:53.881 +08:00 [DBG]                   - Volo.Abp.EventBus.Abstractions.AbpEventBusAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]               - Volo.Abp.Threading.AbpThreadingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Json.SystemTextJson.AbpJsonSystemTextJsonModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Json.AbpJsonAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Timing.AbpTimingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.SettingManagement.AbpSettingManagementDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Features.AbpFeaturesModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.MultiTenancy.AbpMultiTenancyModule
+2026-10-10 11:01:53.881 +08:00 [DBG]               - Volo.Abp.MultiTenancy.AbpMultiTenancyAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Authorization.AbpAuthorizationAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Identity.AbpIdentityDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Users.AbpUsersDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.OpenIddict.AbpOpenIddictDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.TenantManagement.AbpTenantManagementDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.AuditLogging.AbpAuditLoggingDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Auditing.AbpAuditingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Json.AbpJsonModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Auditing.AbpAuditingContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Domain.AbpDddDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.EventBus.AbpEventBusModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Guids.AbpGuidsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.BackgroundWorkers.AbpBackgroundWorkersModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.DistributedLocking.AbpDistributedLockingAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.ObjectMapping.AbpObjectMappingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.ExceptionHandling.AbpExceptionHandlingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Specifications.AbpSpecificationsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Caching.AbpCachingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Serialization.AbpSerializationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Domain.AbpDddDomainSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.BackgroundJobs.AbpBackgroundJobsAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Mapperly.AbpMapperlyModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Identity.AbpPermissionManagementDomainIdentityModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Authorization.AbpAuthorizationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersAbstractionModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.PermissionManagement.OpenIddict.AbpPermissionManagementDomainOpenIddictModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Emailing.AbpEmailingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.TextTemplating.AbpTextTemplatingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.TextTemplating.Scriban.AbpTextTemplatingScribanModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.TextTemplating.AbpTextTemplatingCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.OpenIddict.AbpOpenIddictDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.BlobStoring.AbpBlobStoringModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - LunchFate.LunchFateApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Application.AbpDddApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Account.AbpAccountApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementApplicationContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Application.AbpDddApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.Http.AbpHttpAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.GlobalFeatures.AbpGlobalFeaturesModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Identity.AbpIdentityApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.UI.Navigation.AbpUiNavigationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.UI.AbpUiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementApplicationModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - LunchFate.EntityFrameworkCore.LunchFateEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.PermissionManagement.EntityFrameworkCore.AbpPermissionManagementEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.EntityFrameworkCore.AbpEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.SettingManagement.EntityFrameworkCore.AbpSettingManagementEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.EntityFrameworkCore.SqlServer.AbpEntityFrameworkCoreSqlServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.BackgroundJobs.EntityFrameworkCore.AbpBackgroundJobsEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.AuditLogging.EntityFrameworkCore.AbpAuditLoggingEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.FeatureManagement.EntityFrameworkCore.AbpFeatureManagementEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Identity.EntityFrameworkCore.AbpIdentityEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Users.EntityFrameworkCore.AbpUsersEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.OpenIddict.EntityFrameworkCore.AbpOpenIddictEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.TenantManagement.EntityFrameworkCore.AbpTenantManagementEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.BlobStoring.Database.EntityFrameworkCore.BlobStoringDatabaseEntityFrameworkCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - LunchFate.LunchFateHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.PermissionManagement.HttpApi.AbpPermissionManagementHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.AbpAspNetCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Http.AbpHttpModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.Minify.AbpMinifyModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.AspNetCore.AbpAspNetCoreAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.ApiVersioning.AbpApiVersioningAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcContractsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementHttpApiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.Autofac.AbpAutofacModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Castle.AbpCastleCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.Swashbuckle.AbpSwashbuckleModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.Identity.Blazor.Server.AbpIdentityBlazorServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Web.Theming.AbpAspNetCoreComponentsWebThemingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.BlazoriseUI.AbpBlazoriseUIModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.AspNetCore.Components.Web.AbpAspNetCoreComponentsWebModule
+2026-10-10 11:01:53.881 +08:00 [DBG]               - Volo.Abp.AspNetCore.Components.AbpAspNetCoreComponentsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.PermissionManagement.Blazor.Server.AbpPermissionManagementBlazorServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.AspNetCore.Components.Server.Theming.AbpAspNetCoreComponentsServerThemingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Server.AbpAspNetCoreComponentsServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.Http.Client.AbpHttpClientModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.RemoteServices.AbpRemoteServicesModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.AspNetCore.SignalR.AbpAspNetCoreSignalRModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Packages.AbpAspNetCoreMvcUiPackagesModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingAbstractionsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.AbpAspNetCoreMvcUiBootstrapModule
+2026-10-10 11:01:53.881 +08:00 [DBG]             - Volo.Abp.AspNetCore.Mvc.UI.AbpAspNetCoreMvcUiModule
+2026-10-10 11:01:53.881 +08:00 [DBG]           - Volo.Abp.AspNetCore.Bundling.AbpAspNetCoreBundlingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.TenantManagement.Blazor.Server.AbpTenantManagementBlazorServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.TenantManagement.Blazor.AbpTenantManagementBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.FeatureManagement.Blazor.AbpFeatureManagementBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.FeatureManagement.Blazor.Server.AbpFeatureManagementBlazorServerModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.Account.Web.AbpAccountWebOpenIddictModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.Account.Web.AbpAccountWebModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.Identity.AspNetCore.AbpIdentityAspNetCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.AbpAspNetCoreMvcUiThemeSharedModule
+2026-10-10 11:01:53.881 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Widgets.AbpAspNetCoreMvcUiWidgetsModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.OpenIddict.AbpOpenIddictAspNetCoreModule
+2026-10-10 11:01:53.881 +08:00 [DBG]       - Volo.Abp.AspNetCore.MultiTenancy.AbpAspNetCoreMultiTenancyModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.Server.BasicTheme.AbpAspNetCoreComponentsServerBasicThemeModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.Web.BasicTheme.AbpAspNetCoreComponentsWebBasicThemeModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling.AbpAspNetCoreComponentsWebAssemblyBasicThemeBundlingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Bundling.AbpAspNetCoreComponentsWebAssemblyThemingBundlingModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.AbpAspNetCoreMvcUiBasicThemeModule
+2026-10-10 11:01:53.881 +08:00 [DBG]     - Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy.AbpAspNetCoreMvcUiMultiTenancyModule
+2026-10-10 11:01:53.881 +08:00 [DBG]   - Volo.Abp.AspNetCore.Serilog.AbpAspNetCoreSerilogModule
+2026-10-10 11:01:53.982 +08:00 [DBG] Started background worker: Volo.Abp.OpenIddict.Tokens.TokenCleanupBackgroundWorker
+2026-10-10 11:01:54.448 +08:00 [INF] User profile is available. Using 'C:\Users\Muriel\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-10-10 11:01:54.620 +08:00 [INF] Initialized all ABP modules.
+2026-10-10 11:01:54.737 +08:00 [INF] Now listening on: https://localhost:44352
+2026-10-10 11:01:54.737 +08:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-10-10 11:01:54.737 +08:00 [INF] Hosting environment: Development
+2026-10-10 11:01:54.737 +08:00 [INF] Content root path: X:\TestProject\LunchFate\src\LunchFate.Blazor
+2026-10-10 11:02:08.240 +08:00 [INF] Request starting HTTP/1.1 GET https://localhost:44352/ - null null
+2026-10-10 11:02:09.190 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessRequestContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:02:09.197 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:02:09.199 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.OpenIddictServerHandlers+InferEndpointType.
+2026-10-10 11:02:09.202 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateTransportSecurityRequirement.
+2026-10-10 11:02:09.202 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:02:09.212 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:02:09.212 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+EvaluateValidatedTokens.
+2026-10-10 11:02:09.213 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromAuthorizationHeader.
+2026-10-10 11:02:09.214 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromBodyForm.
+2026-10-10 11:02:09.215 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromQueryString.
+2026-10-10 11:02:09.217 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractClientCertificate.
+2026-10-10 11:02:09.219 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:02:09.219 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was marked as rejected by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:02:09.219 +08:00 [DBG] AuthenticationScheme: OpenIddict.Validation.AspNetCore was not authenticated.
+2026-10-10 11:02:09.282 +08:00 [DBG] Starting resolving tenant...
+2026-10-10 11:02:09.283 +08:00 [DBG] Trying to resolve tenant through 'CurrentUser'...
+2026-10-10 11:02:09.284 +08:00 [DBG] Trying to resolve tenant through 'QueryString'...
+2026-10-10 11:02:09.286 +08:00 [DBG] Trying to resolve tenant through 'Route'...
+2026-10-10 11:02:09.287 +08:00 [DBG] Trying to resolve tenant through 'Header'...
+2026-10-10 11:02:09.288 +08:00 [DBG] Trying to resolve tenant through 'Cookie'...
+2026-10-10 11:02:09.289 +08:00 [DBG] No tenant resolved.
+2026-10-10 11:02:09.367 +08:00 [INF] Executing endpoint '/ (/)'
+2026-10-10 11:02:09.523 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: SettingManagement.Emailing
+2026-10-10 11:02:09.524 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: FeatureManagement.ManageHostFeatures
+2026-10-10 11:02:09.625 +08:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-10-10 11:02:09.830 +08:00 [INF] Executed endpoint '/ (/)'
+2026-10-10 11:02:09.847 +08:00 [INF] Request finished HTTP/1.1 GET https://localhost:44352/ - 200 null text/html; charset=utf-8 1607.4252ms
+2026-10-10 11:03:29.380 +08:00 [INF] Starting web host.
+2026-10-10 11:03:30.597 +08:00 [DBG] Loaded ABP modules:
+2026-10-10 11:03:30.598 +08:00 [DBG] - LunchFate.Blazor.LunchFateBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - LunchFate.LunchFateApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - LunchFate.LunchFateDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - LunchFate.LunchFateDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AuditLogging.AbpAuditLoggingDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Validation.AbpValidationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Validation.AbpValidationAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Localization.AbpLocalizationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]               - Volo.Abp.VirtualFileSystem.AbpVirtualFileSystemModule
+2026-10-10 11:03:30.598 +08:00 [DBG]               - Volo.Abp.Settings.AbpSettingsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                 - Volo.Abp.Localization.AbpLocalizationAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                 - Volo.Abp.Security.AbpSecurityModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                 - Volo.Abp.Data.AbpDataModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                   - Volo.Abp.ObjectExtending.AbpObjectExtendingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                   - Volo.Abp.Uow.AbpUnitOfWorkModule
+2026-10-10 11:03:30.598 +08:00 [DBG]                   - Volo.Abp.EventBus.Abstractions.AbpEventBusAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]               - Volo.Abp.Threading.AbpThreadingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Json.SystemTextJson.AbpJsonSystemTextJsonModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Json.AbpJsonAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Timing.AbpTimingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.SettingManagement.AbpSettingManagementDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Features.AbpFeaturesModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.MultiTenancy.AbpMultiTenancyModule
+2026-10-10 11:03:30.598 +08:00 [DBG]               - Volo.Abp.MultiTenancy.AbpMultiTenancyAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Authorization.AbpAuthorizationAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Identity.AbpIdentityDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Users.AbpUsersDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.OpenIddict.AbpOpenIddictDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.TenantManagement.AbpTenantManagementDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.AuditLogging.AbpAuditLoggingDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Auditing.AbpAuditingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Json.AbpJsonModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Auditing.AbpAuditingContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Domain.AbpDddDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.EventBus.AbpEventBusModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Guids.AbpGuidsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.BackgroundWorkers.AbpBackgroundWorkersModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.DistributedLocking.AbpDistributedLockingAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.ObjectMapping.AbpObjectMappingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.ExceptionHandling.AbpExceptionHandlingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Specifications.AbpSpecificationsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Caching.AbpCachingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Serialization.AbpSerializationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Domain.AbpDddDomainSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.BackgroundJobs.AbpBackgroundJobsAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Mapperly.AbpMapperlyModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Identity.AbpPermissionManagementDomainIdentityModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Authorization.AbpAuthorizationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersAbstractionModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.PermissionManagement.OpenIddict.AbpPermissionManagementDomainOpenIddictModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Emailing.AbpEmailingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.TextTemplating.AbpTextTemplatingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.TextTemplating.Scriban.AbpTextTemplatingScribanModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.TextTemplating.AbpTextTemplatingCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.OpenIddict.AbpOpenIddictDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.BlobStoring.AbpBlobStoringModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - LunchFate.LunchFateApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Application.AbpDddApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Account.AbpAccountApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementApplicationContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Application.AbpDddApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.Http.AbpHttpAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.GlobalFeatures.AbpGlobalFeaturesModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Identity.AbpIdentityApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.UI.Navigation.AbpUiNavigationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.UI.AbpUiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementApplicationModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - LunchFate.EntityFrameworkCore.LunchFateEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.PermissionManagement.EntityFrameworkCore.AbpPermissionManagementEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.EntityFrameworkCore.AbpEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.SettingManagement.EntityFrameworkCore.AbpSettingManagementEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.EntityFrameworkCore.SqlServer.AbpEntityFrameworkCoreSqlServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.BackgroundJobs.EntityFrameworkCore.AbpBackgroundJobsEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.AuditLogging.EntityFrameworkCore.AbpAuditLoggingEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.FeatureManagement.EntityFrameworkCore.AbpFeatureManagementEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Identity.EntityFrameworkCore.AbpIdentityEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Users.EntityFrameworkCore.AbpUsersEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.OpenIddict.EntityFrameworkCore.AbpOpenIddictEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.TenantManagement.EntityFrameworkCore.AbpTenantManagementEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.BlobStoring.Database.EntityFrameworkCore.BlobStoringDatabaseEntityFrameworkCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - LunchFate.LunchFateHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.PermissionManagement.HttpApi.AbpPermissionManagementHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.AbpAspNetCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Http.AbpHttpModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.Minify.AbpMinifyModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.AspNetCore.AbpAspNetCoreAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.ApiVersioning.AbpApiVersioningAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcContractsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementHttpApiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.Autofac.AbpAutofacModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Castle.AbpCastleCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.Swashbuckle.AbpSwashbuckleModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.Identity.Blazor.Server.AbpIdentityBlazorServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Web.Theming.AbpAspNetCoreComponentsWebThemingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.BlazoriseUI.AbpBlazoriseUIModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.AspNetCore.Components.Web.AbpAspNetCoreComponentsWebModule
+2026-10-10 11:03:30.598 +08:00 [DBG]               - Volo.Abp.AspNetCore.Components.AbpAspNetCoreComponentsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.PermissionManagement.Blazor.Server.AbpPermissionManagementBlazorServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.AspNetCore.Components.Server.Theming.AbpAspNetCoreComponentsServerThemingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Server.AbpAspNetCoreComponentsServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.Http.Client.AbpHttpClientModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.RemoteServices.AbpRemoteServicesModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.AspNetCore.SignalR.AbpAspNetCoreSignalRModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Packages.AbpAspNetCoreMvcUiPackagesModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingAbstractionsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.AbpAspNetCoreMvcUiBootstrapModule
+2026-10-10 11:03:30.598 +08:00 [DBG]             - Volo.Abp.AspNetCore.Mvc.UI.AbpAspNetCoreMvcUiModule
+2026-10-10 11:03:30.598 +08:00 [DBG]           - Volo.Abp.AspNetCore.Bundling.AbpAspNetCoreBundlingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.TenantManagement.Blazor.Server.AbpTenantManagementBlazorServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.TenantManagement.Blazor.AbpTenantManagementBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.FeatureManagement.Blazor.AbpFeatureManagementBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.FeatureManagement.Blazor.Server.AbpFeatureManagementBlazorServerModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.Account.Web.AbpAccountWebOpenIddictModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.Account.Web.AbpAccountWebModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.Identity.AspNetCore.AbpIdentityAspNetCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.AbpAspNetCoreMvcUiThemeSharedModule
+2026-10-10 11:03:30.598 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Widgets.AbpAspNetCoreMvcUiWidgetsModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.OpenIddict.AbpOpenIddictAspNetCoreModule
+2026-10-10 11:03:30.598 +08:00 [DBG]       - Volo.Abp.AspNetCore.MultiTenancy.AbpAspNetCoreMultiTenancyModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.Server.BasicTheme.AbpAspNetCoreComponentsServerBasicThemeModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.Web.BasicTheme.AbpAspNetCoreComponentsWebBasicThemeModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling.AbpAspNetCoreComponentsWebAssemblyBasicThemeBundlingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Bundling.AbpAspNetCoreComponentsWebAssemblyThemingBundlingModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.AbpAspNetCoreMvcUiBasicThemeModule
+2026-10-10 11:03:30.598 +08:00 [DBG]     - Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy.AbpAspNetCoreMvcUiMultiTenancyModule
+2026-10-10 11:03:30.598 +08:00 [DBG]   - Volo.Abp.AspNetCore.Serilog.AbpAspNetCoreSerilogModule
+2026-10-10 11:03:30.708 +08:00 [DBG] Started background worker: Volo.Abp.OpenIddict.Tokens.TokenCleanupBackgroundWorker
+2026-10-10 11:03:31.159 +08:00 [INF] User profile is available. Using 'C:\Users\Muriel\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-10-10 11:03:31.339 +08:00 [INF] Initialized all ABP modules.
+2026-10-10 11:03:31.450 +08:00 [INF] Now listening on: https://localhost:44352
+2026-10-10 11:03:31.450 +08:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-10-10 11:03:31.450 +08:00 [INF] Hosting environment: Development
+2026-10-10 11:03:31.450 +08:00 [INF] Content root path: X:\TestProject\LunchFate\src\LunchFate.Blazor
+2026-10-10 11:03:45.915 +08:00 [INF] Request starting HTTP/1.1 GET https://localhost:44352/ - null null
+2026-10-10 11:03:46.910 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessRequestContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:03:46.924 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:03:46.926 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.OpenIddictServerHandlers+InferEndpointType.
+2026-10-10 11:03:46.927 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateTransportSecurityRequirement.
+2026-10-10 11:03:46.927 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:03:46.941 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:03:46.943 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+EvaluateValidatedTokens.
+2026-10-10 11:03:46.946 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromAuthorizationHeader.
+2026-10-10 11:03:46.947 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromBodyForm.
+2026-10-10 11:03:46.948 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromQueryString.
+2026-10-10 11:03:46.949 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractClientCertificate.
+2026-10-10 11:03:46.950 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:03:46.950 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was marked as rejected by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:03:46.950 +08:00 [DBG] AuthenticationScheme: OpenIddict.Validation.AspNetCore was not authenticated.
+2026-10-10 11:03:47.013 +08:00 [DBG] Starting resolving tenant...
+2026-10-10 11:03:47.014 +08:00 [DBG] Trying to resolve tenant through 'CurrentUser'...
+2026-10-10 11:03:47.014 +08:00 [DBG] Trying to resolve tenant through 'QueryString'...
+2026-10-10 11:03:47.016 +08:00 [DBG] Trying to resolve tenant through 'Route'...
+2026-10-10 11:03:47.016 +08:00 [DBG] Trying to resolve tenant through 'Header'...
+2026-10-10 11:03:47.017 +08:00 [DBG] Trying to resolve tenant through 'Cookie'...
+2026-10-10 11:03:47.017 +08:00 [DBG] No tenant resolved.
+2026-10-10 11:03:47.102 +08:00 [INF] Executing endpoint '/ (/)'
+2026-10-10 11:03:47.310 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: SettingManagement.Emailing
+2026-10-10 11:03:47.312 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: FeatureManagement.ManageHostFeatures
+2026-10-10 11:03:47.471 +08:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-10-10 11:03:47.806 +08:00 [INF] Executed endpoint '/ (/)'
+2026-10-10 11:03:47.828 +08:00 [INF] Request finished HTTP/1.1 GET https://localhost:44352/ - 200 null text/html; charset=utf-8 1912.798ms
+2026-10-10 11:03:47.858 +08:00 [INF] Request starting HTTP/1.1 GET https://localhost:44352/Account/Login - null null
+2026-10-10 11:03:47.888 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessRequestContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:03:47.889 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:03:47.889 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.OpenIddictServerHandlers+InferEndpointType.
+2026-10-10 11:03:47.889 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateTransportSecurityRequirement.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+EvaluateValidatedTokens.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromAuthorizationHeader.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromBodyForm.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromQueryString.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractClientCertificate.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:03:47.890 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was marked as rejected by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:03:47.890 +08:00 [DBG] AuthenticationScheme: OpenIddict.Validation.AspNetCore was not authenticated.
+2026-10-10 11:03:47.891 +08:00 [DBG] Starting resolving tenant...
+2026-10-10 11:03:47.891 +08:00 [DBG] Trying to resolve tenant through 'CurrentUser'...
+2026-10-10 11:03:47.891 +08:00 [DBG] Trying to resolve tenant through 'QueryString'...
+2026-10-10 11:03:47.891 +08:00 [DBG] Trying to resolve tenant through 'Route'...
+2026-10-10 11:03:47.891 +08:00 [DBG] Trying to resolve tenant through 'Header'...
+2026-10-10 11:03:47.891 +08:00 [DBG] Trying to resolve tenant through 'Cookie'...
+2026-10-10 11:03:47.891 +08:00 [DBG] No tenant resolved.
+2026-10-10 11:03:47.894 +08:00 [INF] Executing endpoint '/Account/Login'
+2026-10-10 11:03:47.927 +08:00 [INF] Route matched with {page = "/Account/Login", area = "", action = "", controller = ""}. Executing page /Account/Login
+2026-10-10 11:03:47.930 +08:00 [INF] Skipping the execution of current filter as its not the most effective filter implementing the policy Microsoft.AspNetCore.Mvc.ViewFeatures.IAntiforgeryPolicy
+2026-10-10 11:03:48.370 +08:00 [INF] Executing handler method Volo.Abp.Account.Web.Pages.Account.LoginModel.OnGetAsync - ModelState is "Valid"
+2026-10-10 11:03:48.375 +08:00 [INF] Executed handler method OnGetAsync, returned result Microsoft.AspNetCore.Mvc.RazorPages.PageResult.
+2026-10-10 11:03:48.643 +08:00 [DBG] Added bundle 'Basic.Global' to the page in 4.10 ms.
+2026-10-10 11:03:48.673 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: SettingManagement.Emailing
+2026-10-10 11:03:48.674 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: FeatureManagement.ManageHostFeatures
+2026-10-10 11:03:48.748 +08:00 [DBG] Added bundle 'Basic.Global' to the page in 9.75 ms.
+2026-10-10 11:03:48.752 +08:00 [DBG] Added bundle 'Volo.Abp.Account.Web.Pages.Account.LoginModel' to the page in 0.34 ms.
+2026-10-10 11:03:48.759 +08:00 [INF] Executed page /Account/Login in 829.8341ms
+2026-10-10 11:03:48.760 +08:00 [INF] Executed endpoint '/Account/Login'
+2026-10-10 11:03:48.762 +08:00 [INF] Request finished HTTP/1.1 GET https://localhost:44352/Account/Login - 200 null text/html; charset=utf-8 903.9651ms
+2026-10-10 11:05:10.320 +08:00 [INF] Starting web host.
+2026-10-10 11:05:11.571 +08:00 [DBG] Loaded ABP modules:
+2026-10-10 11:05:11.571 +08:00 [DBG] - LunchFate.Blazor.LunchFateBlazorModule
+2026-10-10 11:05:11.571 +08:00 [DBG]   - LunchFate.LunchFateApplicationModule
+2026-10-10 11:05:11.571 +08:00 [DBG]     - LunchFate.LunchFateDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - LunchFate.LunchFateDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.AuditLogging.AbpAuditLoggingDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Validation.AbpValidationModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Validation.AbpValidationAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Localization.AbpLocalizationModule
+2026-10-10 11:05:11.571 +08:00 [DBG]               - Volo.Abp.VirtualFileSystem.AbpVirtualFileSystemModule
+2026-10-10 11:05:11.571 +08:00 [DBG]               - Volo.Abp.Settings.AbpSettingsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                 - Volo.Abp.Localization.AbpLocalizationAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                 - Volo.Abp.Security.AbpSecurityModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                 - Volo.Abp.Data.AbpDataModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                   - Volo.Abp.ObjectExtending.AbpObjectExtendingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                   - Volo.Abp.Uow.AbpUnitOfWorkModule
+2026-10-10 11:05:11.571 +08:00 [DBG]                   - Volo.Abp.EventBus.Abstractions.AbpEventBusAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]               - Volo.Abp.Threading.AbpThreadingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Json.SystemTextJson.AbpJsonSystemTextJsonModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Json.AbpJsonAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Timing.AbpTimingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.SettingManagement.AbpSettingManagementDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Features.AbpFeaturesModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.MultiTenancy.AbpMultiTenancyModule
+2026-10-10 11:05:11.571 +08:00 [DBG]               - Volo.Abp.MultiTenancy.AbpMultiTenancyAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Authorization.AbpAuthorizationAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Identity.AbpIdentityDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Users.AbpUsersDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.OpenIddict.AbpOpenIddictDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.TenantManagement.AbpTenantManagementDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.AuditLogging.AbpAuditLoggingDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Auditing.AbpAuditingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Json.AbpJsonModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Auditing.AbpAuditingContractsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Domain.AbpDddDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.EventBus.AbpEventBusModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Guids.AbpGuidsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.BackgroundWorkers.AbpBackgroundWorkersModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.DistributedLocking.AbpDistributedLockingAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.ObjectMapping.AbpObjectMappingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.ExceptionHandling.AbpExceptionHandlingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Specifications.AbpSpecificationsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Caching.AbpCachingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.Serialization.AbpSerializationModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Domain.AbpDddDomainSharedModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.BackgroundJobs.AbpBackgroundJobsDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.BackgroundJobs.AbpBackgroundJobsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.BackgroundJobs.AbpBackgroundJobsAbstractionsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Mapperly.AbpMapperlyModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Identity.AbpPermissionManagementDomainIdentityModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.Authorization.AbpAuthorizationModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersAbstractionModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.PermissionManagement.OpenIddict.AbpPermissionManagementDomainOpenIddictModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.Emailing.AbpEmailingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.TextTemplating.AbpTextTemplatingModule
+2026-10-10 11:05:11.571 +08:00 [DBG]           - Volo.Abp.TextTemplating.Scriban.AbpTextTemplatingScribanModule
+2026-10-10 11:05:11.571 +08:00 [DBG]             - Volo.Abp.TextTemplating.AbpTextTemplatingCoreModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.Users.AbpUsersDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.OpenIddict.AbpOpenIddictDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.BlobStoring.Database.BlobStoringDatabaseDomainModule
+2026-10-10 11:05:11.571 +08:00 [DBG]         - Volo.Abp.BlobStoring.AbpBlobStoringModule
+2026-10-10 11:05:11.571 +08:00 [DBG]     - LunchFate.LunchFateApplicationContractsModule
+2026-10-10 11:05:11.571 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.Application.AbpDddApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.SettingManagement.AbpSettingManagementApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Account.AbpAccountApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.TenantManagement.AbpTenantManagementApplicationContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.PermissionManagement.AbpPermissionManagementApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Application.AbpDddApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.Http.AbpHttpAbstractionsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.GlobalFeatures.AbpGlobalFeaturesModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.FeatureManagement.AbpFeatureManagementApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Identity.AbpIdentityApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.UI.Navigation.AbpUiNavigationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.UI.AbpUiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementApplicationModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - LunchFate.EntityFrameworkCore.LunchFateEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.PermissionManagement.EntityFrameworkCore.AbpPermissionManagementEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.EntityFrameworkCore.AbpEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.SettingManagement.EntityFrameworkCore.AbpSettingManagementEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.EntityFrameworkCore.SqlServer.AbpEntityFrameworkCoreSqlServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.BackgroundJobs.EntityFrameworkCore.AbpBackgroundJobsEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.AuditLogging.EntityFrameworkCore.AbpAuditLoggingEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.FeatureManagement.EntityFrameworkCore.AbpFeatureManagementEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Identity.EntityFrameworkCore.AbpIdentityEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Users.EntityFrameworkCore.AbpUsersEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.OpenIddict.EntityFrameworkCore.AbpOpenIddictEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.TenantManagement.EntityFrameworkCore.AbpTenantManagementEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.BlobStoring.Database.EntityFrameworkCore.BlobStoringDatabaseEntityFrameworkCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - LunchFate.LunchFateHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.PermissionManagement.HttpApi.AbpPermissionManagementHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.AbpAspNetCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.Http.AbpHttpModule
+2026-10-10 11:05:11.572 +08:00 [DBG]             - Volo.Abp.Minify.AbpMinifyModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.AspNetCore.AbpAspNetCoreAbstractionsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.ApiVersioning.AbpApiVersioningAbstractionsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.AbpAspNetCoreMvcContractsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.SettingManagement.AbpSettingManagementHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Account.AbpAccountHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Identity.AbpIdentityHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.TenantManagement.AbpTenantManagementHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.FeatureManagement.AbpFeatureManagementHttpApiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.Autofac.AbpAutofacModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Castle.AbpCastleCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.Swashbuckle.AbpSwashbuckleModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.Identity.Blazor.Server.AbpIdentityBlazorServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Web.Theming.AbpAspNetCoreComponentsWebThemingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.BlazoriseUI.AbpBlazoriseUIModule
+2026-10-10 11:05:11.572 +08:00 [DBG]             - Volo.Abp.AspNetCore.Components.Web.AbpAspNetCoreComponentsWebModule
+2026-10-10 11:05:11.572 +08:00 [DBG]               - Volo.Abp.AspNetCore.Components.AbpAspNetCoreComponentsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.PermissionManagement.Blazor.Server.AbpPermissionManagementBlazorServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.AspNetCore.Components.Server.Theming.AbpAspNetCoreComponentsServerThemingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Components.Server.AbpAspNetCoreComponentsServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.Http.Client.AbpHttpClientModule
+2026-10-10 11:05:11.572 +08:00 [DBG]             - Volo.Abp.RemoteServices.AbpRemoteServicesModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.AspNetCore.SignalR.AbpAspNetCoreSignalRModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Packages.AbpAspNetCoreMvcUiPackagesModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingAbstractionsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Bundling.AbpAspNetCoreMvcUiBundlingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.AbpAspNetCoreMvcUiBootstrapModule
+2026-10-10 11:05:11.572 +08:00 [DBG]             - Volo.Abp.AspNetCore.Mvc.UI.AbpAspNetCoreMvcUiModule
+2026-10-10 11:05:11.572 +08:00 [DBG]           - Volo.Abp.AspNetCore.Bundling.AbpAspNetCoreBundlingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.TenantManagement.Blazor.Server.AbpTenantManagementBlazorServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.TenantManagement.Blazor.AbpTenantManagementBlazorModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.FeatureManagement.Blazor.AbpFeatureManagementBlazorModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.FeatureManagement.Blazor.Server.AbpFeatureManagementBlazorServerModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.Account.Web.AbpAccountWebOpenIddictModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.Account.Web.AbpAccountWebModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.Identity.AspNetCore.AbpIdentityAspNetCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.AbpAspNetCoreMvcUiThemeSharedModule
+2026-10-10 11:05:11.572 +08:00 [DBG]         - Volo.Abp.AspNetCore.Mvc.UI.Widgets.AbpAspNetCoreMvcUiWidgetsModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.OpenIddict.AbpOpenIddictAspNetCoreModule
+2026-10-10 11:05:11.572 +08:00 [DBG]       - Volo.Abp.AspNetCore.MultiTenancy.AbpAspNetCoreMultiTenancyModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.Server.BasicTheme.AbpAspNetCoreComponentsServerBasicThemeModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.Web.BasicTheme.AbpAspNetCoreComponentsWebBasicThemeModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling.AbpAspNetCoreComponentsWebAssemblyBasicThemeBundlingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Bundling.AbpAspNetCoreComponentsWebAssemblyThemingBundlingModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.AbpAspNetCoreMvcUiBasicThemeModule
+2026-10-10 11:05:11.572 +08:00 [DBG]     - Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy.AbpAspNetCoreMvcUiMultiTenancyModule
+2026-10-10 11:05:11.572 +08:00 [DBG]   - Volo.Abp.AspNetCore.Serilog.AbpAspNetCoreSerilogModule
+2026-10-10 11:05:11.679 +08:00 [DBG] Started background worker: Volo.Abp.OpenIddict.Tokens.TokenCleanupBackgroundWorker
+2026-10-10 11:05:12.184 +08:00 [INF] User profile is available. Using 'C:\Users\Muriel\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-10-10 11:05:12.374 +08:00 [INF] Initialized all ABP modules.
+2026-10-10 11:05:12.519 +08:00 [INF] Now listening on: https://localhost:44352
+2026-10-10 11:05:12.519 +08:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-10-10 11:05:12.519 +08:00 [INF] Hosting environment: Development
+2026-10-10 11:05:12.519 +08:00 [INF] Content root path: X:\TestProject\LunchFate\src\LunchFate.Blazor
+2026-10-10 11:05:28.503 +08:00 [INF] Request starting HTTP/1.1 GET https://localhost:44352/Account/Login - null null
+2026-10-10 11:05:29.372 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessRequestContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:05:29.385 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ResolveRequestUri.
+2026-10-10 11:05:29.388 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.OpenIddictServerHandlers+InferEndpointType.
+2026-10-10 11:05:29.389 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateTransportSecurityRequirement.
+2026-10-10 11:05:29.390 +08:00 [DBG] The event OpenIddict.Server.OpenIddictServerEvents+ProcessRequestContext was successfully processed by OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:05:29.401 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ValidateHostHeader.
+2026-10-10 11:05:29.403 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+EvaluateValidatedTokens.
+2026-10-10 11:05:29.404 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromAuthorizationHeader.
+2026-10-10 11:05:29.405 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromBodyForm.
+2026-10-10 11:05:29.405 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractAccessTokenFromQueryString.
+2026-10-10 11:05:29.407 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreHandlers+ExtractClientCertificate.
+2026-10-10 11:05:29.408 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was successfully processed by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:05:29.408 +08:00 [DBG] The event OpenIddict.Validation.OpenIddictValidationEvents+ProcessAuthenticationContext was marked as rejected by OpenIddict.Validation.OpenIddictValidationHandlers+ValidateRequiredTokens.
+2026-10-10 11:05:29.409 +08:00 [DBG] AuthenticationScheme: OpenIddict.Validation.AspNetCore was not authenticated.
+2026-10-10 11:05:29.472 +08:00 [DBG] Starting resolving tenant...
+2026-10-10 11:05:29.472 +08:00 [DBG] Trying to resolve tenant through 'CurrentUser'...
+2026-10-10 11:05:29.473 +08:00 [DBG] Trying to resolve tenant through 'QueryString'...
+2026-10-10 11:05:29.474 +08:00 [DBG] Trying to resolve tenant through 'Route'...
+2026-10-10 11:05:29.475 +08:00 [DBG] Trying to resolve tenant through 'Header'...
+2026-10-10 11:05:29.476 +08:00 [DBG] Trying to resolve tenant through 'Cookie'...
+2026-10-10 11:05:29.477 +08:00 [DBG] No tenant resolved.
+2026-10-10 11:05:29.562 +08:00 [INF] Executing endpoint '/Account/Login'
+2026-10-10 11:05:29.587 +08:00 [INF] Route matched with {page = "/Account/Login", area = "", action = "", controller = ""}. Executing page /Account/Login
+2026-10-10 11:05:29.589 +08:00 [INF] Skipping the execution of current filter as its not the most effective filter implementing the policy Microsoft.AspNetCore.Mvc.ViewFeatures.IAntiforgeryPolicy
+2026-10-10 11:05:30.043 +08:00 [INF] Executing handler method Volo.Abp.Account.Web.Pages.Account.LoginModel.OnGetAsync - ModelState is "Valid"
+2026-10-10 11:05:30.049 +08:00 [INF] Executed handler method OnGetAsync, returned result Microsoft.AspNetCore.Mvc.RazorPages.PageResult.
+2026-10-10 11:05:30.340 +08:00 [DBG] Added bundle 'Basic.Global' to the page in 6.69 ms.
+2026-10-10 11:05:30.546 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: SettingManagement.Emailing
+2026-10-10 11:05:30.548 +08:00 [INF] Authorization failed. These requirements were not met:
+PermissionRequirement: FeatureManagement.ManageHostFeatures
+2026-10-10 11:05:30.655 +08:00 [DBG] Added bundle 'Basic.Global' to the page in 9.49 ms.
+2026-10-10 11:05:30.661 +08:00 [DBG] Added bundle 'Volo.Abp.Account.Web.Pages.Account.LoginModel' to the page in 0.65 ms.
+2026-10-10 11:05:30.682 +08:00 [INF] Executed page /Account/Login in 1090.7443ms
+2026-10-10 11:05:30.682 +08:00 [INF] Executed endpoint '/Account/Login'
+2026-10-10 11:05:30.693 +08:00 [INF] Request finished HTTP/1.1 GET https://localhost:44352/Account/Login - 200 null text/html; charset=utf-8 2190.1739ms

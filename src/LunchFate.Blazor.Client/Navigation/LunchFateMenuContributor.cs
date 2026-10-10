@@ -2,24 +2,26 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using LunchFate.Localization;
-using LunchFate.Permissions;
 using LunchFate.MultiTenancy;
 using Volo.Abp.Account.Localization;
 using Volo.Abp.UI.Navigation;
 using Localization.Resources.AbpUi;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.SettingManagement.Blazor.Menus;
-using Volo.Abp.Users;
 using Volo.Abp.TenantManagement.Blazor.Navigation;
 using Volo.Abp.Identity.Blazor;
+
 namespace LunchFate.Blazor.Client.Navigation;
+
 public class LunchFateMenuContributor : IMenuContributor
 {
     private readonly IConfiguration _configuration;
+
     public LunchFateMenuContributor(IConfiguration configuration)
     {
         _configuration = configuration;
     }
+
     public async Task ConfigureMenuAsync(MenuConfigurationContext context)
     {
         if (context.Menu.Name == StandardMenus.Main)
@@ -31,7 +33,8 @@ public class LunchFateMenuContributor : IMenuContributor
             await ConfigureUserMenuAsync(context);
         }
     }
-    private static async Task ConfigureMainMenuAsync(MenuConfigurationContext context)
+
+    private static Task ConfigureMainMenuAsync(MenuConfigurationContext context)
     {
         var l = context.GetLocalizer<LunchFateResource>();
 
@@ -54,31 +57,11 @@ public class LunchFateMenuContributor : IMenuContributor
         {
             administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
         }
+
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
         administration.SetSubItemOrder(SettingManagementMenus.GroupName, 3);
 
-        var bookStoreMenu = new ApplicationMenuItem(
-            "BooksStore",
-            l["Menu:LunchFate"],
-            icon: "fa fa-book"
-        );
-        context.Menu.AddItem(bookStoreMenu);
-        if (await context.IsGrantedAsync(LunchFatePermissions.Books.Default))
-        {
-            bookStoreMenu.AddItem(new ApplicationMenuItem(
-                "BooksStore.Books",
-                l["Menu:Books"],
-                url: "/books"
-            ));
-        }
-        if (await context.IsGrantedAsync(LunchFatePermissions.Authors.Default))
-        {
-            bookStoreMenu.AddItem(new ApplicationMenuItem(
-                "BooksStore.Authors",
-                l["Menu:Authors"],
-                url: "/authors"
-            ));
-        }
+        return Task.CompletedTask;
     }
 
     private async Task ConfigureUserMenuAsync(MenuConfigurationContext context)
