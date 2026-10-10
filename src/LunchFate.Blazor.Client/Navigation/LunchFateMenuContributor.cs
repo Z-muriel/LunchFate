@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using LunchFate.Localization;
 using LunchFate.MultiTenancy;
+using LunchFate.Permissions;
 using Volo.Abp.Account.Localization;
 using Volo.Abp.UI.Navigation;
 using Localization.Resources.AbpUi;
@@ -13,6 +14,9 @@ using Volo.Abp.Identity.Blazor;
 
 namespace LunchFate.Blazor.Client.Navigation;
 
+/// <summary>
+/// 组装侧边栏主菜单与用户菜单（首页、店铺管理、管理分组）。
+/// </summary>
 public class LunchFateMenuContributor : IMenuContributor
 {
     private readonly IConfiguration _configuration;
@@ -34,7 +38,11 @@ public class LunchFateMenuContributor : IMenuContributor
         }
     }
 
-    private static Task ConfigureMainMenuAsync(MenuConfigurationContext context)
+    /// <summary>
+    /// 构建主菜单：首页、管理分组排序，以及按权限追加的店铺管理入口。
+    /// </summary>
+    /// <param name="context">菜单配置上下文</param>
+    private static async Task ConfigureMainMenuAsync(MenuConfigurationContext context)
     {
         var l = context.GetLocalizer<LunchFateResource>();
 
@@ -49,21 +57,31 @@ public class LunchFateMenuContributor : IMenuContributor
             order: 1
         ));
 
+        //MultiTenancyConsts.IsEnabled 是编译期常量，此处按其取值直接排序。
         if (MultiTenancyConsts.IsEnabled)
         {
             administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
-        }
-        else
-        {
-            administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
         }
 
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
         administration.SetSubItemOrder(SettingManagementMenus.GroupName, 3);
 
-        return Task.CompletedTask;
+        //店铺管理（需求文档 §4：菜单"管理 → 店铺管理"）
+        if (await context.IsGrantedAsync(LunchFatePermissions.Shops.Default))
+        {
+            administration.AddItem(new ApplicationMenuItem(
+                LunchFateMenus.Shops,
+                l["Menu:Shops"],
+                url: "/shops",
+                icon: "fas fa-store"
+            ));
+        }
     }
 
+    /// <summary>
+    /// 构建用户菜单：WASM 环境跳转授权服务器的"我的账号"。
+    /// </summary>
+    /// <param name="context">菜单配置上下文</param>
     private async Task ConfigureUserMenuAsync(MenuConfigurationContext context)
     {
         if (OperatingSystem.IsBrowser())

@@ -4,16 +4,30 @@ using Volo.Abp.Localization;
 
 namespace LunchFate.Permissions;
 
+/// <summary>
+/// 定义本项目持有的权限组与权限项（需求文档 §7）。
+/// </summary>
 public class LunchFatePermissionDefinitionProvider : PermissionDefinitionProvider
 {
+    /// <summary>
+    /// 注册权限组 <c>LunchFate</c> 及店铺管理的默认/增/改/删权限。
+    /// </summary>
+    /// <param name="context">ABP 权限定义上下文</param>
     public override void Define(IPermissionDefinitionContext context)
     {
         var myGroup = context.AddGroup(LunchFatePermissions.GroupName);
 
-        //Define your own permissions here. Example:
-        //myGroup.AddPermission(LunchFatePermissions.MyPermission1, L("Permission:MyPermission1"));
+        var shopsPermission = myGroup.AddPermission(LunchFatePermissions.Shops.Default, L("Permission:Shops"));
+        shopsPermission.AddChild(LunchFatePermissions.Shops.Create, L("Permission:Shops.Create"));
+        shopsPermission.AddChild(LunchFatePermissions.Shops.Edit, L("Permission:Shops.Edit"));
+        shopsPermission.AddChild(LunchFatePermissions.Shops.Delete, L("Permission:Shops.Delete"));
     }
 
+    /// <summary>
+    /// 创建指向本项目本地化资源的可本地化字符串。
+    /// </summary>
+    /// <param name="name">本地化键名</param>
+    /// <returns>可本地化字符串</returns>
     private static LocalizableString L(string name)
     {
         return LocalizableString.Create<LunchFateResource>(name);

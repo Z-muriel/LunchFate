@@ -1,21 +1,258 @@
 @page "/"
+@using System.Globalization
+@using System.Linq
+@using LunchFate.Shops
+@using Volo.Abp
+@inject IShopAppService ShopAppService
+@inject NavigationManager NavigationManager
+@inherits LunchFateComponentBase
 
-@* 主页占位：后续将实现“午餐大转盘”（见 docs/需求文档.md） *@
+@* 主页 · 午餐大转盘（需求文档 FR-W-01 ~ FR-W-06） *@
 
-<Container Padding="Padding.Is4.FromStart.Is4.FromEnd">
-    <Row>
-        <Column>
-            <Card>
-                <CardBody TextAlignment="TextAlignment.Center">
-                    <h1 class="mb-3">LunchFate</h1>
-                    <p class="mb-0">
-                        午餐命运 · 中午吃什么，交给大转盘来决定。
-                    </p>
-                    <p class="text-muted">
-                        主页正在建设中，大转盘即将上线。
-                    </p>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-</Container>
+<div class="wheel-page">
+    <h2 class="wheel-title">@L["Wheel:Title"]</h2>
+    <p class="wheel-subtitle">@L["Wheel:Subtitle"]</p>
+
+    @if (_loading)
+    {
+        <div class="wheel-spinner" role="status"></div>
+    }
+    else if (_error != null)
+    {
+        <div class="alert alert-danger">@_error</div>
+    }
+    else if (_shops.Count == 0)
+    {
+        <div class="wheel-empty">
+            <div class="wheel-empty-icon">🍽</div>
+            <h4>@L["Wheel:Empty"]</h4>
+            <p class="text-muted">@L["Wheel:EmptyHint"]</p>
+            <button type="button" class="btn btn-primary" @onclick="GoToShops">@L["Wheel:GoToShops"]</button>
+        </div>
+    }
+    else
+    {
+        <div class="wheel-stage">
+            <div class="wheel-pointer">▼</div>
+            <div class="wheel"
+                 style="background:@WheelBackground; transform:rotate(@RotationText); transition:@_transition;">
+                @for (var i = 0; i < _shops.Count; i++)
+                {
+                    var index = i;
+                    <div class="wheel-sector" style="transform:rotate(@SectorAngle(index));">
+                        <span class="wheel-label">@_shops[index].Name</span>
+                    </div>
+                }
+            </div>
+            <div class="wheel-hub">
+                <button type="button"
+                        class="wheel-start"
+                        disabled="@_spinning"
+                        @onclick="StartSpinAsync">
+                    @(_spinning ? L["Wheel:Spinning"] : L["Wheel:Start"])
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@* 抽取结果弹窗（需求文档 FR-W-03、FR-W-05） *@
+<Modal @ref="@_resultModal" Centered="true">
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@L["Wheel:ResultTitle"]</ModalTitle>
+            <CloseButton Clicked="CloseResultModal" />
+        </ModalHeader>
+        <ModalBody>
+            @if (_result != null)
+            {
+                <div class="text-center mb-3">
+                    <div class="fs-3 fw-bold">@_result.Name</div>
+                </div>
+                <dl class="row mb-0">
+                    <dt class="col-4">@L["Wheel:Category"]</dt>
+                    <dd class="col-8">@CategoryText(_result.Category)</dd>
+                    <dt class="col-4">@L["Wheel:AveragePrice"]</dt>
+                    <dd class="col-8">@_result.AveragePrice.ToString("0.##")</dd>
+                    <dt class="col-4">@L["Wheel:Address"]</dt>
+                    <dd class="col-8">@(_result.Address ?? "-")</dd>
+                </dl>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <button type="button" class="btn btn-outline-primary" @onclick="SpinAgainAsync">@L["Wheel:Again"]</button>
+            <button type="button" class="btn btn-primary" @onclick="CloseResultModal">@L["Wheel:Confirm"]</button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    /// <summary>转盘动画时长（秒）；结束延迟再加 200ms 以确保过渡完全停稳。</summary>
+    private const int SpinSeconds = 5;
+
+    /// <summary>扇区配色环，超过 12 个店铺时循环取色。</summary>
+    private static readonly string[] Colors =
+    [
+        "#ff8a65", "#4fc3f7", "#81c784", "#ba68c8", "#ffd54f", "#4db6ac",
+        "#f06292", "#9575cd", "#a1887f", "#64b5f6", "#aed581", "#ff7043"
+    ];
+
+    private List<EnabledShopDto> _shops = new();
+    private bool _loading = true;
+    private string? _error;
+
+    private bool _spinning;
+    private double _rotation;
+    private int _turns;
+    private EnabledShopDto? _result;
+    private Modal? _resultModal;
+
+    /// <summary>
+    /// 过渡效果始终生效，保证只有 <c>_rotation</c> 变化时触发旋转动画。
+    /// </summary>
+    private string _transition =
+        $"transform {SpinSeconds}s cubic-bezier(0.15, 0.6, 0.2, 1)";
+
+    /// <summary>
+    /// 把累计旋转角格式化为 CSS 的 deg 值。
+    /// 固定两位小数并使用不变文化，避免部分区域设置输出逗号小数破坏 CSS。
+    /// </summary>
+    private string RotationText =>
+        _rotation.ToString("F2", CultureInfo.InvariantCulture) + "deg";
+
+    /// <summary>
+    /// 按当前启用店铺生成 conic-gradient 扇区背景；无店铺时给出统一灰色占位。
+    /// </summary>
+    private string WheelBackground
+    {
+        get
+        {
+            if (_shops.Count == 0)
+            {
+                return "conic-gradient(#e9ecef 0deg 360deg)";
+            }
+
+            var step = 360.0 / _shops.Count;
+            var stops = new List<string>();
+            for (var i = 0; i < _shops.Count; i++)
+            {
+                var from = (i * step).ToString("F2", CultureInfo.InvariantCulture);
+                var to = ((i + 1) * step).ToString("F2", CultureInfo.InvariantCulture);
+                stops.Add($"{Colors[i % Colors.Length]} {from}deg {to}deg");
+            }
+
+            return $"conic-gradient(from 0deg, {string.Join(", ", stops)})";
+        }
+    }
+
+    /// <summary>
+    /// 初始化：加载大转盘数据源。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadAsync();
+    }
+
+    /// <summary>
+    /// 加载已启用店铺作为转盘扇区；失败时展示本地化的兜底提示。
+    /// </summary>
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var result = await ShopAppService.GetEnabledListAsync();
+            _shops = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>
+    /// 计算第 index 个扇区中心相对正上方的角度（顺时针，单位 deg）。
+    /// </summary>
+    /// <param name="index">扇区序号</param>
+    /// <returns>扇区中心角，供标签定位使用</returns>
+    private string SectorAngle(int index)
+    {
+        var step = 360.0 / _shops.Count;
+        var center = (index + 0.5) * step;
+        return center.ToString("F2", CultureInfo.InvariantCulture) + "deg";
+    }
+
+    /// <summary>
+    /// 取分类枚举的本地化显示文本。
+    /// </summary>
+    /// <param name="category">店铺分类</param>
+    /// <returns>本地化后的分类名</returns>
+    private string CategoryText(ShopCategory category) => L[$"Enum:ShopCategory.{(int)category}"].Value;
+
+    /// <summary>
+    /// 抽取：等概率随机选中一家（FR-W-04），并把指针停在该扇区中心。
+    /// 指针固定在 0°（正上方），扇区 i 的中心角为 (i + 0.5) * step（顺时针），
+    /// 因此需要旋转 360 * n + (360 - 中心角) 度。
+    /// </summary>
+    private async Task StartSpinAsync()
+    {
+        if (_spinning || _shops.Count == 0)
+        {
+            return;
+        }
+
+        _spinning = true;
+        _result = null;
+        StateHasChanged();
+
+        var step = 360.0 / _shops.Count;
+        var winnerIndex = Random.Shared.Next(_shops.Count);
+        var centerAngle = (winnerIndex + 0.5) * step;
+
+        _turns += 5 + Random.Shared.Next(3); // 5~7 圈
+        _rotation = _turns * 360.0 + (360.0 - centerAngle);
+        StateHasChanged();
+
+        await Task.Delay(TimeSpan.FromSeconds(SpinSeconds) + TimeSpan.FromMilliseconds(200));
+
+        _result = _shops[winnerIndex];
+        _spinning = false;
+        StateHasChanged();
+        await _resultModal!.Show();
+    }
+
+    /// <summary>
+    /// 关闭结果弹窗后立即重新抽取。
+    /// </summary>
+    private async Task SpinAgainAsync()
+    {
+        await _resultModal!.Hide();
+        await StartSpinAsync();
+    }
+
+    /// <summary>
+    /// 关闭结果弹窗。
+    /// </summary>
+    private async Task CloseResultModal() => await _resultModal!.Hide();
+
+    /// <summary>
+    /// 跳转到店铺管理页（用于空数据引导）。
+    /// </summary>
+    private void GoToShops() => NavigationManager.NavigateTo("/shops");
+
+    /// <summary>
+    /// 把捕获的异常转换为可展示给用户的提示：
+    /// 服务端返回的用户友好业务异常保留原文，其余一律使用本地化兜底文案，
+    /// 避免把框架内部英文错误直接暴露给用户。
+    /// </summary>
+    /// <param name="ex">捕获到的异常</param>
+    /// <returns>可直接展示的错误提示</returns>
+    private string ToUserMessage(Exception ex) =>
+        ex is UserFriendlyException ? ex.Message : L["Error:Unexpected"].Value;
+}

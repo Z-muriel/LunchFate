@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using LunchFate.Shops;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -26,6 +27,8 @@ public class LunchFateDbContext :
     IIdentityDbContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
+
+    public DbSet<Shop> Shops { get; set; }
 
     #region Entities from the modules
 
@@ -79,6 +82,20 @@ public class LunchFateDbContext :
         builder.ConfigureBlobStoring();
 
         /* Configure your own tables/entities inside here */
+
+        builder.Entity<Shop>(b =>
+        {
+            b.ToTable(LunchFateConsts.DbTablePrefix + "Shops", LunchFateConsts.DbSchema);
+            b.ConfigureByConvention(); //auto configure for the base class props
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ShopConsts.MaxNameLength);
+            b.Property(x => x.Address).HasMaxLength(ShopConsts.MaxAddressLength);
+            b.Property(x => x.Phone).HasMaxLength(ShopConsts.MaxPhoneLength);
+            b.Property(x => x.AveragePrice).HasPrecision(18, 2);
+            b.Property(x => x.Rating).HasPrecision(3, 1);
+            b.Property(x => x.Tags).HasMaxLength(ShopConsts.MaxTagsLength);
+            b.Property(x => x.Remark).HasMaxLength(ShopConsts.MaxRemarkLength);
+            b.HasIndex(x => x.Name); //需求文档 §3.2：同名（未删除）唯一查询
+        });
 
         //builder.Entity<YourEntity>(b =>
         //{

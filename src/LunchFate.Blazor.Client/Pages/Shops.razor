@@ -1,0 +1,448 @@
+@page "/shops"
+@attribute [Authorize(LunchFatePermissions.Shops.Default)]
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
+@using LunchFate.Permissions
+@using LunchFate.Shops
+@using Microsoft.AspNetCore.Authorization
+@using Volo.Abp
+@inject IShopAppService ShopAppService
+@inherits LunchFateComponentBase
+
+@* 店铺管理（需求文档 FR-S-01 ~ FR-S-05） *@
+
+<Card>
+    <CardHeader>
+        <Row Class="justify-content-between">
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <CardTitle>@L["Shops"]</CardTitle>
+            </Column>
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <button type="button" class="btn btn-primary" @onclick="OpenCreateModal">
+                    @L["NewShop"]
+                </button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+        @* 筛选区（需求文档 FR-S-01） *@
+        <Row Class="mb-3">
+            <Column ColumnSize="ColumnSize.Is3">
+                <label class="form-label">@L["Keyword"]</label>
+                <input type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <label class="form-label">@L["Category"]</label>
+                <select class="form-select" @bind="_filterCategory">
+                    <option value="">@L["AnyCategory"]</option>
+                    @foreach (var category in Enum.GetValues<ShopCategory>())
+                    {
+                        <option value="@((int)category)">@CategoryText(category)</option>
+                    }
+                </select>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <label class="form-label">@L["Status"]</label>
+                <select class="form-select" @bind="_filterEnabled">
+                    <option value="">@L["All"]</option>
+                    <option value="true">@L["Enabled"]</option>
+                    <option value="false">@L["Disabled"]</option>
+                </select>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3" Class="d-flex align-items-end gap-2">
+                <button type="button" class="btn btn-primary" @onclick="LoadAsync">@L["Search"]</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="ResetFiltersAsync">@L["Reset"]</button>
+            </Column>
+        </Row>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="alert alert-danger">@_error</div>
+        }
+
+        <DataGrid TItem="ShopDto"
+                  Data="@_items"
+                  ShowPager="true"
+                  PageSize="10">
+            <DataGridColumns>
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.Name)"
+                                Caption="@L["Name"]" />
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.Category)"
+                                Caption="@L["Category"]">
+                    <DisplayTemplate>
+                        @CategoryText(context.Item.Category)
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.AveragePrice)"
+                                Caption="@L["AveragePrice"]">
+                    <DisplayTemplate>
+                        @context.Item.AveragePrice.ToString("0.##")
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.Rating)"
+                                Caption="@L["Rating"]">
+                    <DisplayTemplate>
+                        @(context.Item.Rating.HasValue ? context.Item.Rating.Value.ToString("0.0") : "-")
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.Address)"
+                                Caption="@L["Address"]" />
+                <DataGridColumn TItem="ShopDto"
+                                Field="@nameof(ShopDto.IsEnabled)"
+                                Caption="@L["Status"]">
+                    <DisplayTemplate>
+                        @if (context.Item.IsEnabled)
+                        {
+                            <span class="badge text-bg-success">@L["Enabled"]</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">@L["Disabled"]</span>
+                        }
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridEntityActionsColumn TItem="ShopDto" @ref="@_actionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="ShopDto" EntityActionsColumn="@_actionsColumn">
+                            <EntityAction TItem="ShopDto"
+                                          Text="@L["Edit"]"
+                                          Clicked="() => OpenEditModal(context.Item)" />
+                            <EntityAction TItem="ShopDto"
+                                          Text="@(context.Item.IsEnabled ? L["Disabled"] : L["Enabled"])"
+                                          Clicked="() => ToggleEnabled(context.Item)" />
+                            <EntityAction TItem="ShopDto"
+                                          Text="@L["Delete"]"
+                                          Clicked="() => AskDelete(context.Item)" />
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* 新增 / 编辑弹窗 *@
+<Modal @ref="@_formModal" Centered="true">
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@(_isEdit ? L["Edit"] : L["NewShop"])</ModalTitle>
+            <CloseButton Clicked="CloseFormModal" />
+        </ModalHeader>
+        <EditForm Model="@_entity" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ModalBody>
+                @if (_formError != null)
+                {
+                    <div class="alert alert-danger">@_formError</div>
+                }
+                <div class="mb-3">
+                    <label class="form-label">@L["Name"]</label>
+                    <input type="text" class="form-control" maxlength="@ShopConsts.MaxNameLength" @bind="_entity.Name" />
+                    <ValidationMessage For="@(() => _entity.Name)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Category"]</label>
+                    <select class="form-select" @bind="_entity.Category">
+                        @foreach (var category in Enum.GetValues<ShopCategory>())
+                        {
+                            <option value="@category">@CategoryText(category)</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["AveragePrice"]</label>
+                    <input type="number" min="0" step="0.5" class="form-control" @bind="_entity.AveragePrice" />
+                    <ValidationMessage For="@(() => _entity.AveragePrice)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Rating"]</label>
+                    <input type="number" min="1" max="5" step="0.5" class="form-control" @bind="_entity.Rating" />
+                    <ValidationMessage For="@(() => _entity.Rating)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Address"]</label>
+                    <input type="text" class="form-control" maxlength="@ShopConsts.MaxAddressLength" @bind="_entity.Address" />
+                    <ValidationMessage For="@(() => _entity.Address)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Phone"]</label>
+                    <input type="text" class="form-control" maxlength="@ShopConsts.MaxPhoneLength" @bind="_entity.Phone" />
+                    <ValidationMessage For="@(() => _entity.Phone)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Tags"]</label>
+                    <input type="text" class="form-control" placeholder="," @bind="_entity.Tags" />
+                    <ValidationMessage For="@(() => _entity.Tags)" />
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="_shopEnabled" @bind="_entity.IsEnabled" />
+                    <label class="form-check-label" for="_shopEnabled">@L["IsEnabled"]</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@L["Remark"]</label>
+                    <input type="text" class="form-control" maxlength="@ShopConsts.MaxRemarkLength" @bind="_entity.Remark" />
+                    <ValidationMessage For="@(() => _entity.Remark)" />
+                </div>
+            </ModalBody>
+            <ModalFooter>
+                <button type="button" class="btn btn-secondary" @onclick="CloseFormModal">@L["Cancel"]</button>
+                <button type="submit" class="btn btn-primary">@L["Save"]</button>
+            </ModalFooter>
+        </EditForm>
+    </ModalContent>
+</Modal>
+
+@* 删除二次确认弹窗（需求文档 FR-S-04） *@
+<Modal @ref="@_deleteModal" Centered="true">
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@L["Delete"]</ModalTitle>
+            <CloseButton Clicked="CloseDeleteModal" />
+        </ModalHeader>
+        <ModalBody>
+            <p class="mb-0">@string.Format(L["ShopDeletionConfirmationMessage"].Value, _deletingItem?.Name)</p>
+        </ModalBody>
+        <ModalFooter>
+            <button type="button" class="btn btn-secondary" @onclick="CloseDeleteModal">@L["Cancel"]</button>
+            <button type="button" class="btn btn-danger" @onclick="DeleteAsync">@L["Delete"]</button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private IReadOnlyList<ShopDto> _items = Array.Empty<ShopDto>();
+    private string? _keyword;
+    private string _filterCategory = "";
+    private string _filterEnabled = "";
+    private string? _error;
+
+    private Modal? _formModal;
+    private Modal? _deleteModal;
+    private DataGridEntityActionsColumn<ShopDto>? _actionsColumn;
+
+    /// <summary>当前弹窗是否为编辑模式；false 表示新增。</summary>
+    private bool _isEdit;
+
+    /// <summary>编辑目标店铺 Id，新增模式下为 <see cref="Guid.Empty"/>。</summary>
+    private Guid _editingId;
+
+    private CreateUpdateShopDto _entity = new();
+
+    /// <summary>新增/编辑弹窗内的业务错误提示（服务端返回），null 表示无错误。</summary>
+    private string? _formError;
+
+    /// <summary>待确认删除的店铺，null 表示删除弹窗未激活。</summary>
+    private ShopDto? _deletingItem;
+
+    /// <summary>
+    /// 初始化：加载店铺列表。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadAsync();
+    }
+
+    /// <summary>
+    /// 按当前筛选条件重新加载列表；失败时展示本地化的错误提示。
+    /// </summary>
+    private async Task LoadAsync()
+    {
+        _error = null;
+        try
+        {
+            var input = new ShopSearchInput
+            {
+                Keyword = _keyword,
+                Category = string.IsNullOrWhiteSpace(_filterCategory)
+                    ? null
+                    : (ShopCategory?)int.Parse(_filterCategory),
+                IsEnabled = _filterEnabled switch
+                {
+                    "true" => true,
+                    "false" => false,
+                    _ => null
+                },
+                MaxResultCount = 1000,
+                Sorting = nameof(ShopDto.Name)
+            };
+
+            var result = await ShopAppService.GetListAsync(input);
+            _items = result.Items;
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 清空筛选条件并重新加载列表。
+    /// </summary>
+    private async Task ResetFiltersAsync()
+    {
+        _keyword = null;
+        _filterCategory = "";
+        _filterEnabled = "";
+        await LoadAsync();
+    }
+
+    /// <summary>
+    /// 取分类枚举的本地化显示文本。
+    /// </summary>
+    /// <param name="category">店铺分类</param>
+    /// <returns>本地化后的分类名</returns>
+    private string CategoryText(ShopCategory category) => L[$"Enum:ShopCategory.{(int)category}"].Value;
+
+    /// <summary>
+    /// 打开新增弹窗并重置表单状态。
+    /// </summary>
+    private async Task OpenCreateModal()
+    {
+        _isEdit = false;
+        _editingId = Guid.Empty;
+        _entity = new CreateUpdateShopDto();
+        _formError = null;
+        await _formModal!.Show();
+    }
+
+    /// <summary>
+    /// 打开编辑弹窗并把列表项回填到表单。
+    /// </summary>
+    /// <param name="item">待编辑的店铺</param>
+    private async Task OpenEditModal(ShopDto item)
+    {
+        _isEdit = true;
+        _editingId = item.Id;
+        _formError = null;
+        _entity = new CreateUpdateShopDto
+        {
+            Name = item.Name,
+            Category = item.Category,
+            Address = item.Address,
+            Phone = item.Phone,
+            AveragePrice = item.AveragePrice,
+            Rating = item.Rating,
+            Tags = item.Tags,
+            Weight = item.Weight,
+            IsEnabled = item.IsEnabled,
+            Remark = item.Remark
+        };
+        await _formModal!.Show();
+    }
+
+    /// <summary>
+    /// 关闭新增/编辑弹窗。
+    /// </summary>
+    private async Task CloseFormModal() => await _formModal!.Hide();
+
+    /// <summary>
+    /// 表单提交：按模式调用新增或更新接口，成功后关闭弹窗并刷新列表。
+    /// </summary>
+    private async Task SaveAsync()
+    {
+        _formError = null;
+        try
+        {
+            if (_isEdit)
+            {
+                await ShopAppService.UpdateAsync(_editingId, _entity);
+            }
+            else
+            {
+                await ShopAppService.CreateAsync(_entity);
+            }
+
+            await _formModal!.Hide();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _formError = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 切换店铺启用状态（停用的店铺不进入大转盘，需求文档 FR-S-05）。
+    /// </summary>
+    /// <param name="item">目标店铺</param>
+    private async Task ToggleEnabled(ShopDto item)
+    {
+        _error = null;
+        try
+        {
+            await ShopAppService.UpdateAsync(item.Id, new CreateUpdateShopDto
+            {
+                Name = item.Name,
+                Category = item.Category,
+                Address = item.Address,
+                Phone = item.Phone,
+                AveragePrice = item.AveragePrice,
+                Rating = item.Rating,
+                Tags = item.Tags,
+                Weight = item.Weight,
+                IsEnabled = !item.IsEnabled,
+                Remark = item.Remark
+            });
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 打开删除二次确认弹窗。
+    /// </summary>
+    /// <param name="item">待删除的店铺</param>
+    private async Task AskDelete(ShopDto item)
+    {
+        _deletingItem = item;
+        await _deleteModal!.Show();
+    }
+
+    /// <summary>
+    /// 关闭删除确认弹窗。
+    /// </summary>
+    private async Task CloseDeleteModal() => await _deleteModal!.Hide();
+
+    /// <summary>
+    /// 执行软删除并刷新列表。
+    /// </summary>
+    private async Task DeleteAsync()
+    {
+        if (_deletingItem == null)
+        {
+            return;
+        }
+
+        _error = null;
+        try
+        {
+            await ShopAppService.DeleteAsync(_deletingItem.Id);
+            await _deleteModal!.Hide();
+            _deletingItem = null;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 把捕获的异常转换为可展示给用户的提示：
+    /// 服务端返回的用户友好业务异常保留原文，其余一律使用本地化兜底文案，
+    /// 避免把框架内部英文错误直接暴露给用户。
+    /// </summary>
+    /// <param name="ex">捕获到的异常</param>
+    /// <returns>可直接展示的错误提示</returns>
+    private string ToUserMessage(Exception ex) =>
+        ex is UserFriendlyException ? ex.Message : L["Error:Unexpected"].Value;
+}

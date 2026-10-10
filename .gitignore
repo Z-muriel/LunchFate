@@ -274,6 +274,7 @@ src/LunchFate.HttpApi.HostWithIds/Logs/*
 src/LunchFate.DbMigrator/Logs/*
 src/LunchFate.Blazor.Server/Logs/*
 src/LunchFate.Blazor.Server.Tiered/Logs/*
+src/LunchFate.Blazor/Logs/*
 
 # Use abp install-libs to restore.
 **/wwwroot/libs/*
