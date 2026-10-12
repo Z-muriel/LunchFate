@@ -239,6 +239,68 @@ public class ShopAppService : ApplicationService, IShopAppService
     }
 
     /// <summary>
+    /// 批量启用/停用店铺（需求文档 FR-S-06）。
+    /// 与批量新增不同，这里不涉及名称唯一性等可预期的逐条失败，因此整体单事务提交：
+    /// 要么全部生效，要么全部回滚，避免用户看到"一半成功"的中间态。
+    /// </summary>
+    /// <param name="input">门店标识集合与目标启用状态</param>
+    /// <returns>批量处理统计</returns>
+    /// <exception cref="UserFriendlyException">入参为空、含空标识或超出单批上限时抛出</exception>
+    [Authorize(LunchFatePermissions.Shops.Default)]
+    [Authorize(LunchFatePermissions.Shops.Edit)]
+    [UnitOfWork(isTransactional: true)]
+    public virtual async Task<BatchSetShopsEnabledResult> BatchSetEnabledAsync(BatchSetShopsEnabledInput input)
+    {
+        RequireLogin();
+
+        // 1. 显式拒绝非法入参，绝不静默截断或静默忽略——那会让回显的统计与实际操作不一致。
+        if (input?.Ids is null || input.Ids.Count == 0)
+        {
+            throw new UserFriendlyException(L["Shops:BatchSelectionEmpty"].Value);
+        }
+
+        // 2. 先去重再判上限：重复标识不应占用批次额度，也不该被重复统计。
+        var ids = input.Ids.Distinct().ToList();
+        if (ids.Count > MaxBatchSize)
+        {
+            throw new UserFriendlyException(L["Shops:BatchSelectionTooLarge", MaxBatchSize].Value);
+        }
+
+        if (ids.Contains(Guid.Empty))
+        {
+            throw new UserFriendlyException(L["Shops:BatchSelectionInvalid"].Value);
+        }
+
+        // 3. 只加载确实存在的门店：仓储已应用软删除与多租户全局过滤器，
+        //    已删除或属于其它租户的门店会自然落入 NotFound，而不是被误改。
+        var query = await _repository.GetQueryableAsync();
+        var shops = await AsyncExecuter.ToListAsync(query.Where(s => ids.Contains(s.Id)));
+
+        var result = new BatchSetShopsEnabledResult
+        {
+            NotFoundCount = ids.Count - shops.Count
+        };
+
+        // 4. 只更新状态确实需要变更的门店，避免无意义地刷新审计字段（LastModificationTime）。
+        var changed = shops.Where(s => s.IsEnabled != input.IsEnabled).ToList();
+        result.UpdatedCount = changed.Count;
+        result.UnchangedCount = shops.Count - changed.Count;
+
+        if (changed.Count > 0)
+        {
+            // 5. 只改启用状态：不经过 Apply，因此不会触碰地址、坐标与权重，也不会触发重新地理编码。
+            foreach (var shop in changed)
+            {
+                shop.IsEnabled = input.IsEnabled;
+            }
+
+            await _repository.UpdateManyAsync(changed, autoSave: true);
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// 新增店铺；名称在未删除数据中必须唯一（领域服务校验，需求文档 §3.2）。
     /// </summary>
     /// <param name="input">新增入参</param>

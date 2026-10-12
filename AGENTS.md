@@ -6,7 +6,7 @@ Repo: ABP Framework 10.6.1 layered "app" template on .NET 10 — Blazor Web App 
 
 ```bash
 dotnet build LunchFate.slnx                                   # currently 0 warnings / 0 errors — keep it that way
-dotnet test LunchFate.slnx --no-build                         # 83 tests, all in EntityFrameworkCore.Tests
+dotnet test LunchFate.slnx --no-build                         # 92 tests, all in EntityFrameworkCore.Tests
 dotnet test test/LunchFate.EntityFrameworkCore.Tests/LunchFate.EntityFrameworkCore.Tests.csproj --no-build \
   --filter "FullyQualifiedName~Should_Query_AppUser"          # single test
 dotnet run --project src/LunchFate.Blazor                     # https://localhost:44352, login admin / abc123!
@@ -20,7 +20,7 @@ abp install-libs                                              # after clone: www
 
 ## Tests
 
-- Only `test/LunchFate.EntityFrameworkCore.Tests` has runnable tests (83: 3 template samples + shop CRUD + record persistence/authorization/tenant isolation + geocoding timing + mixed wheel candidates). The other test projects print `没有可用测试` / "no tests available" and exit 0 — that's expected: their test classes are abstract; concrete tests live in the EF Core project. Shared abstract suites live in `test/LunchFate.Application.Tests/` (`Shops/ShopAppServiceTests.cs`) and are driven by `EfCoreShopAppServiceTests`.
+- Only `test/LunchFate.EntityFrameworkCore.Tests` has runnable tests (92: 3 template samples + shop CRUD + record persistence/authorization/tenant isolation + geocoding timing + mixed wheel candidates + batch enable/disable). The other test projects print `没有可用测试` / "no tests available" and exit 0 — that's expected: their test classes are abstract; concrete tests live in the EF Core project. Shared abstract suites live in `test/LunchFate.Application.Tests/` (`Shops/ShopAppServiceTests.cs`) and are driven by `EfCoreShopAppServiceTests`.
 - EF tests run against **in-memory SQLite** (`AbpUnitTestSqliteDatabase` in `LunchFateEntityFrameworkCoreTestModule`) — no SQL Server needed. Each test method gets a fresh container and DB, so service-replacing test modules (e.g. `LunchFateShopGeocodeTestModule`, `LunchFateRecordAuthorizationTestModule`) are safe.
 - The test host boots the full ABP module (seed data on startup, always-allow auth, background jobs disabled). EF tests share xUnit collection `"LunchFate collection"`.
 - Replacing a service in a test module: register the interface via a factory pointing at the concrete type (`AddSingleton<IGaodeMapService>(sp => sp.GetRequiredService<RecordingGaodeMapService>())`). A plain `AddSingleton<I, Impl>()` creates a **second** instance next to ABP's conventional registration, so the test would read an empty recorder.

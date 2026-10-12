@@ -53,7 +53,7 @@
                 </select>
             </Column>
             <Column ColumnSize="ColumnSize.Is3" Class="d-flex align-items-end gap-2">
-                <button type="button" class="btn btn-primary" @onclick="ReloadAsync">@L["Search"]</button>
+                <button type="button" class="btn btn-primary" @onclick="SearchAsync">@L["Search"]</button>
                 <button type="button" class="btn btn-outline-secondary" @onclick="ResetFiltersAsync">@L["Reset"]</button>
             </Column>
         </Row>
@@ -68,6 +68,45 @@
             <div class="alert alert-danger">@_error</div>
         }
 
+        @if (!string.IsNullOrEmpty(_notice))
+        {
+            <div class="alert alert-info">@_notice</div>
+        }
+
+        @* 批量操作工具栏（需求文档 FR-S-06）：勾选跨页累计，"全选本页"只作用于当前页 *@
+        @if (_canEdit)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <span class="small text-muted">@L["Shops:BatchSelectedCount", _selectedIds.Count]</span>
+                    <label class="small mb-0">
+                        <input type="checkbox" checked="@AllPageSelected" @onchange="ToggleSelectPageAsync" />
+                        @L["Shops:BatchSelectPage"]
+                    </label>
+                    <button type="button"
+                            class="btn btn-sm btn-link p-0"
+                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                            @onclick="ClearSelectionAsync">
+                        @L["Shops:BatchClearSelection"]
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-success"
+                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                            @onclick="() => AskBatchSetEnabledAsync(true)">
+                        @L["Shops:BatchEnable"]
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                            @onclick="() => AskBatchSetEnabledAsync(false)">
+                        @L["Shops:BatchDisable"]
+                    </button>
+                </div>
+            </div>
+        }
+
         @* 服务端分页：ReadData 每次翻页/排序回调，由应用服务完成筛选、计数、排序与分页 *@
         <DataGrid TItem="ShopDto"
                   @ref="@_grid"
@@ -78,6 +117,19 @@
                   PageSize="10"
                   Responsive="true">
             <DataGridColumns>
+                @* 选择列：跨页累计勾选，供批量启用/停用使用（需求文档 FR-S-06） *@
+                <DataGridColumn TItem="ShopDto" Caption="">
+                    <DisplayTemplate>
+                        @if (_canEdit)
+                        {
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   aria-label="@L["Shops:SelectRow"]"
+                                   checked="@IsSelected(context.Item)"
+                                   @onchange="() => ToggleSelectedAsync(context.Item)" />
+                        }
+                    </DisplayTemplate>
+                </DataGridColumn>
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.Name)"
                                 Caption="@L["Name"]"
@@ -255,6 +307,28 @@
     </ModalContent>
 </Modal>
 
+@* 批量启用/停用二次确认弹窗（需求文档 FR-S-06） *@
+<Modal @ref="@_batchModal" Centered="true">
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@BatchActionText</ModalTitle>
+            <CloseButton Clicked="CloseBatchModal" />
+        </ModalHeader>
+        <ModalBody>
+            <p class="mb-0">@BatchConfirmText</p>
+        </ModalBody>
+        <ModalFooter>
+            <button type="button" class="btn btn-secondary" @onclick="CloseBatchModal">@L["Cancel"]</button>
+            <button type="button"
+                    class="@BatchConfirmButtonClass"
+                    disabled="@_batchBusy"
+                    @onclick="BatchSetEnabledAsync">
+                @BatchActionText
+            </button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
 @* 删除二次确认弹窗（需求文档 FR-S-04） *@
 <Modal @ref="@_deleteModal" Centered="true">
     <ModalContent>
@@ -284,7 +358,20 @@
     private Modal? _formModal;
     private Modal? _deleteModal;
     private Modal? _mapModal;
+    private Modal? _batchModal;
     private DataGridEntityActionsColumn<ShopDto>? _actionsColumn;
+
+    /// <summary>跨页累计的已选门店标识；批量启用/停用按此集合提交（需求文档 FR-S-06）。</summary>
+    private readonly HashSet<Guid> _selectedIds = [];
+
+    /// <summary>批量操作进行中标记，用于禁用按钮防止重复提交。</summary>
+    private bool _batchBusy;
+
+    /// <summary>批量操作的目标启用状态：true 为启用，false 为停用。</summary>
+    private bool _batchTargetEnabled;
+
+    /// <summary>批量操作结果提示（已更新 / 已是目标状态 / 未找到 三类计数）。</summary>
+    private string? _notice;
 
     /// <summary>当前弹窗是否为编辑模式；false 表示新增。</summary>
     private bool _isEdit;
@@ -311,6 +398,22 @@
 
     /// <summary>是否拥有删除店铺权限；用于隐藏删除操作。</summary>
     private bool _canDelete;
+
+    /// <summary>当前页是否已全部选中；无数据时为 false，避免空列表显示"已全选"。</summary>
+    private bool AllPageSelected => _items.Count > 0 && _items.All(IsSelected);
+
+    /// <summary>批量操作的动作文案，同时用于确认弹窗标题与确认按钮。</summary>
+    private string BatchActionText =>
+        (_batchTargetEnabled ? L["Shops:BatchEnable"] : L["Shops:BatchDisable"]).Value;
+
+    /// <summary>批量操作的确认提示，带上本次实际选中的门店数。</summary>
+    private string BatchConfirmText => string.Format(
+        (_batchTargetEnabled ? L["Shops:BatchEnableConfirm"] : L["Shops:BatchDisableConfirm"]).Value,
+        _selectedIds.Count);
+
+    /// <summary>确认按钮样式：启用用成功色、停用用警示色，与操作方向一致。</summary>
+    private string BatchConfirmButtonClass =>
+        _batchTargetEnabled ? "btn btn-success" : "btn btn-warning";
 
     /// <summary>
     /// 初始化：缓存用户的店铺管理权限（服务端各操作另有授权强制校验）。
@@ -393,6 +496,16 @@
     }
 
     /// <summary>
+    /// 应用筛选条件：先清空跨页勾选再查询。
+    /// 筛选条件变化后旧选择可能已不在结果集中，保留会造成"看不见却被操作"的误解。
+    /// </summary>
+    private async Task SearchAsync()
+    {
+        ClearSelection();
+        await ReloadAsync();
+    }
+
+    /// <summary>
     /// 清空筛选条件并重新加载列表。
     /// </summary>
     private async Task ResetFiltersAsync()
@@ -400,6 +513,7 @@
         _keyword = null;
         _filterCategory = "";
         _filterEnabled = "";
+        ClearSelection();
         await ReloadAsync();
     }
 
@@ -470,6 +584,7 @@
             }
 
             await _formModal!.Hide();
+            ClearSelection();
             await ReloadAsync();
         }
         catch (Exception ex)
@@ -554,6 +669,10 @@
         try
         {
             await ShopAppService.DeleteAsync(_deletingItem.Id);
+
+            // 被删除的门店已不存在，从跨页选择中摘掉它，避免下次批量操作把它计入"未找到"。
+            _selectedIds.Remove(_deletingItem.Id);
+
             await _deleteModal!.Hide();
             _deletingItem = null;
             await ReloadAsync();
@@ -561,6 +680,134 @@
         catch (Exception ex)
         {
             _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>
+    /// 判断门店是否已选中（按 Id 跨页判断，翻页不影响已选状态）。
+    /// </summary>
+    /// <param name="item">列表行对应的门店</param>
+    private bool IsSelected(ShopDto item) => _selectedIds.Contains(item.Id);
+
+    /// <summary>
+    /// 切换单行门店的选中状态。
+    /// </summary>
+    /// <param name="item">列表行对应的门店</param>
+    private Task ToggleSelectedAsync(ShopDto item)
+    {
+        if (!_selectedIds.Remove(item.Id))
+        {
+            _selectedIds.Add(item.Id);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 全选或取消全选当前页；跨页已选项不受影响（只操作当前页可见的行）。
+    /// </summary>
+    /// <param name="args">复选框变更参数</param>
+    private Task ToggleSelectPageAsync(ChangeEventArgs args)
+    {
+        var select = args.Value is true or "true";
+        foreach (var item in _items)
+        {
+            if (select)
+            {
+                _selectedIds.Add(item.Id);
+            }
+            else
+            {
+                _selectedIds.Remove(item.Id);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 清空跨页选择并清除上一次的批量操作提示。
+    /// </summary>
+    private void ClearSelection()
+    {
+        _selectedIds.Clear();
+        _notice = null;
+    }
+
+    /// <summary>
+    /// "清空选择"按钮的事件处理；按钮未选中任何门店时处于禁用态。
+    /// </summary>
+    private Task ClearSelectionAsync()
+    {
+        ClearSelection();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 打开批量启用/停用的二次确认弹窗；无选中门店时不做任何事。
+    /// </summary>
+    /// <param name="isEnabled">目标启用状态</param>
+    private async Task AskBatchSetEnabledAsync(bool isEnabled)
+    {
+        if (_selectedIds.Count == 0)
+        {
+            return;
+        }
+
+        _batchTargetEnabled = isEnabled;
+        _error = null;
+        _notice = null;
+        await _batchModal!.Show();
+    }
+
+    /// <summary>
+    /// 关闭批量操作确认弹窗。
+    /// </summary>
+    private async Task CloseBatchModal() => await _batchModal!.Hide();
+
+    /// <summary>
+    /// 提交批量启用/停用：成功后清空选择、刷新列表并回显三类计数。
+    /// </summary>
+    private async Task BatchSetEnabledAsync()
+    {
+        if (_selectedIds.Count == 0)
+        {
+            return;
+        }
+
+        _batchBusy = true;
+        _error = null;
+        _notice = null;
+
+        // 先固化目标状态与标识快照：刷新流程会清空 _selectedIds，回调里再读就晚了。
+        var isEnabled = _batchTargetEnabled;
+        var ids = _selectedIds.ToList();
+
+        try
+        {
+            var result = await ShopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+            {
+                Ids = ids,
+                IsEnabled = isEnabled
+            });
+
+            await _batchModal!.Hide();
+            ClearSelection();
+            await ReloadAsync();
+
+            _notice = string.Format(
+                (isEnabled ? L["Shops:BatchEnabledResult"] : L["Shops:BatchDisabledResult"]).Value,
+                result.UpdatedCount,
+                result.UnchangedCount,
+                result.NotFoundCount);
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _batchBusy = false;
         }
     }
 }

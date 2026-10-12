@@ -28,4 +28,13 @@ public interface IShopAppService :
     /// <param name="inputs">店铺新增入参</param>
     /// <returns>批量处理统计</returns>
     Task<BatchCreateShopsResult> BatchCreateAsync(List<CreateUpdateShopDto> inputs);
+
+    /// <summary>
+    /// 批量启用/停用店铺（需求文档 FR-S-06）。
+    /// 只更新状态确实需要变更的门店，整体单事务；重复提交同一批门店为幂等操作。
+    /// 空集合、含空标识或超过单批上限时抛出 <c>UserFriendlyException</c>，不静默截断入参。
+    /// </summary>
+    /// <param name="input">门店标识集合与目标启用状态</param>
+    /// <returns>批量处理统计</returns>
+    Task<BatchSetShopsEnabledResult> BatchSetEnabledAsync(BatchSetShopsEnabledInput input);
 }

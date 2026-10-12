@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -181,6 +182,187 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         wheel.Items.Select(x => x.Id).Distinct().Count().ShouldBe(20);
         wheel.Items.Select(x => x.Name).OrderBy(x => x).ToArray()
             .ShouldBe(Enumerable.Range(0, 20).Select(i => $"转盘店铺{i}").OrderBy(x => x).ToArray());
+    }
+
+    /// <summary>批量停用：只更新选中门店，未选中的门店保持启用（FR-S-06）。</summary>
+    [Fact]
+    public async Task Should_Batch_Disable_Selected_Shops()
+    {
+        using var principal = Login();
+        var first = await _shopAppService.CreateAsync(NewShop("批量停用 A"));
+        var second = await _shopAppService.CreateAsync(NewShop("批量停用 B"));
+        var untouched = await _shopAppService.CreateAsync(NewShop("批量停用 C"));
+
+        var result = await _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+        {
+            Ids = new List<Guid> { first.Id, second.Id },
+            IsEnabled = false
+        });
+
+        result.UpdatedCount.ShouldBe(2);
+        result.UnchangedCount.ShouldBe(0);
+        result.NotFoundCount.ShouldBe(0);
+
+        (await _shopAppService.GetAsync(first.Id)).IsEnabled.ShouldBeFalse();
+        (await _shopAppService.GetAsync(second.Id)).IsEnabled.ShouldBeFalse();
+        (await _shopAppService.GetAsync(untouched.Id)).IsEnabled.ShouldBeTrue();
+
+        // 批量停用后应从转盘候选中消失
+        (await _shopAppService.GetEnabledListAsync()).Items.Select(x => x.Id)
+            .ShouldBe(new[] { untouched.Id });
+    }
+
+    /// <summary>批量启用：已是目标状态的门店计入 Unchanged，且不写库（幂等，FR-S-06）。</summary>
+    [Fact]
+    public async Task Should_Batch_Enable_And_Report_Unchanged_Shops()
+    {
+        using var principal = Login();
+        var alreadyEnabled = await _shopAppService.CreateAsync(NewShop("批量启用 已启用"));
+        var disabledA = await _shopAppService.CreateAsync(NewShop("批量启用 A", isEnabled: false));
+        var disabledB = await _shopAppService.CreateAsync(NewShop("批量启用 B", isEnabled: false));
+
+        var result = await _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+        {
+            Ids = new List<Guid> { alreadyEnabled.Id, disabledA.Id, disabledB.Id },
+            IsEnabled = true
+        });
+
+        result.UpdatedCount.ShouldBe(2);
+        result.UnchangedCount.ShouldBe(1);
+        result.NotFoundCount.ShouldBe(0);
+
+        (await _shopAppService.GetAsync(disabledA.Id)).IsEnabled.ShouldBeTrue();
+        (await _shopAppService.GetAsync(disabledB.Id)).IsEnabled.ShouldBeTrue();
+        (await _shopAppService.GetAsync(alreadyEnabled.Id)).IsEnabled.ShouldBeTrue();
+    }
+
+    /// <summary>已软删除或标识不存在的门店计入 NotFound，且不影响其余门店的更新（FR-S-06）。</summary>
+    [Fact]
+    public async Task Should_Report_Not_Found_Ids_In_Batch()
+    {
+        using var principal = Login();
+        var alive = await _shopAppService.CreateAsync(NewShop("批量 存活"));
+        var deleted = await _shopAppService.CreateAsync(NewShop("批量 已删除"));
+        await _shopAppService.DeleteAsync(deleted.Id);
+
+        var result = await _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+        {
+            Ids = new List<Guid> { alive.Id, deleted.Id, Guid.NewGuid() },
+            IsEnabled = false
+        });
+
+        result.UpdatedCount.ShouldBe(1);
+        result.UnchangedCount.ShouldBe(0);
+        result.NotFoundCount.ShouldBe(2);
+        (await _shopAppService.GetAsync(alive.Id)).IsEnabled.ShouldBeFalse();
+    }
+
+    /// <summary>重复标识按去重后的集合统计，不得重复计数。</summary>
+    [Fact]
+    public async Task Should_Deduplicate_Ids_In_Batch()
+    {
+        using var principal = Login();
+        var shop = await _shopAppService.CreateAsync(NewShop("批量 去重"));
+
+        var result = await _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+        {
+            Ids = new List<Guid> { shop.Id, shop.Id, shop.Id },
+            IsEnabled = false
+        });
+
+        result.UpdatedCount.ShouldBe(1);
+        result.UnchangedCount.ShouldBe(0);
+        result.NotFoundCount.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// 批量启停不得触碰名称、地址、价格、标签、权重与备注。
+    /// 回归保护：该接口不经过 Apply，若被改成复用更新逻辑，部分字段会被入参里的默认值清空。
+    /// </summary>
+    [Fact]
+    public async Task Should_Not_Touch_Other_Fields_When_Batch_Toggling()
+    {
+        using var principal = Login();
+        var created = await _shopAppService.CreateAsync(NewShop("批量 字段保护"));
+        var before = await _shopAppService.GetAsync(created.Id);
+
+        await _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+        {
+            Ids = new List<Guid> { created.Id },
+            IsEnabled = false
+        });
+
+        var after = await _shopAppService.GetAsync(created.Id);
+        after.IsEnabled.ShouldBeFalse();
+        after.Name.ShouldBe(before.Name);
+        after.Category.ShouldBe(before.Category);
+        after.Address.ShouldBe(before.Address);
+        after.Phone.ShouldBe(before.Phone);
+        after.AveragePrice.ShouldBe(before.AveragePrice);
+        after.Rating.ShouldBe(before.Rating);
+        after.Tags.ShouldBe(before.Tags);
+        after.Weight.ShouldBe(before.Weight);
+        after.Remark.ShouldBe(before.Remark);
+        after.Longitude.ShouldBe(before.Longitude);
+        after.Latitude.ShouldBe(before.Latitude);
+    }
+
+    /// <summary>空集合入参必须显式拒绝，不得静默当成"无事发生"。</summary>
+    [Fact]
+    public async Task Should_Reject_Empty_Batch_Selection()
+    {
+        using var principal = Login();
+
+        await Should.ThrowAsync<UserFriendlyException>(() =>
+            _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+            {
+                Ids = new List<Guid>(),
+                IsEnabled = false
+            }));
+    }
+
+    /// <summary>
+    /// null 入参同样必须被拒绝。
+    /// 这里断言基类 <see cref="AbpException"/>：ABP 的参数校验拦截器会先抛
+    /// <c>AbpValidationException</c>，服务内的显式判空则抛 <c>UserFriendlyException</c>，
+    /// 两条路径都属于"拒绝"，测试不应绑死其中一种。
+    /// </summary>
+    [Fact]
+    public async Task Should_Reject_Null_Batch_Selection()
+    {
+        using var principal = Login();
+
+        await Should.ThrowAsync<AbpException>(() =>
+            _shopAppService.BatchSetEnabledAsync(null!));
+    }
+
+    /// <summary>超过单批上限必须显式拒绝，不得静默截断（截断会让回显计数与实际选择不一致）。</summary>
+    [Fact]
+    public async Task Should_Reject_Oversized_Batch_Selection()
+    {
+        using var principal = Login();
+        var ids = Enumerable.Range(0, 101).Select(_ => Guid.NewGuid()).ToList();
+
+        await Should.ThrowAsync<UserFriendlyException>(() =>
+            _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+            {
+                Ids = ids,
+                IsEnabled = false
+            }));
+    }
+
+    /// <summary>含空标识的入参必须显式拒绝，避免把 Guid.Empty 当作有效门店查询。</summary>
+    [Fact]
+    public async Task Should_Reject_Empty_Guid_In_Batch_Selection()
+    {
+        using var principal = Login();
+
+        await Should.ThrowAsync<UserFriendlyException>(() =>
+            _shopAppService.BatchSetEnabledAsync(new BatchSetShopsEnabledInput
+            {
+                Ids = new List<Guid> { Guid.Empty },
+                IsEnabled = true
+            }));
     }
 
     /// <summary>为当前测试建立可释放的认证身份，避免污染其他测试及种子初始化。</summary>
