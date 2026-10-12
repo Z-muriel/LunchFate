@@ -1,0 +1,707 @@
+@using System.Collections.Generic
+@using System.Linq
+@using LunchFate.Maps
+@using LunchFate.Shops
+@implements IAsyncDisposable
+@inject IMapAppService MapAppService
+@inject IJSRuntime JSRuntime
+@inherits LunchFateComponentBase
+
+<Card Class="mt-4">
+    <CardHeader>
+        <CardTitle>@L["Map:NearbyTitle"]</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">@L["Map:Keywords"]</label>
+                <input class="form-control" @bind="_keywords" @bind:event="oninput" placeholder="@L["Map:KeywordsPlaceholder"]" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@L["Map:Radius"]</label>
+                <select class="form-select" @bind="_radius">
+                    <option value="1000">1 km</option>
+                    <option value="3000">3 km</option>
+                    <option value="5000">5 km</option>
+                    <option value="10000">10 km</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-primary" disabled="@_loading" @onclick="SearchAsync">
+                    @(_loading ? L["Map:Searching"] : L["Map:SearchNearby"])
+                </button>
+                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="LocateAsync">
+                    @L["Map:Locate"]
+                </button>
+                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="SetAsDefaultAsync">
+                    @L["Map:SetDefault"]
+                </button>
+                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="RestoreDefaultAsync">
+                    @L["Map:RestoreDefault"]
+                </button>
+            </div>
+        </div>
+
+        <div class="small text-muted mt-2">
+            @L["Map:SelectedPoint"]：@_longitude.ToString("F6"), @_latitude.ToString("F6")
+            <span class="ms-2">@L["Map:PickHint"]</span>
+        </div>
+        <div class="small text-muted">
+            @L["Map:DefaultLabel"]：@_defaultLongitude.ToString("F6"), @_defaultLatitude.ToString("F6")
+            <span class="ms-1">·</span>
+            @L[_hasLocalDefault ? "Map:DefaultSourceLocal" : "Map:DefaultSourceConfig"]
+            @if (!string.IsNullOrWhiteSpace(_defaultLocationName))
+            {
+                <span class="ms-1">·</span>
+                @_defaultLocationName
+            }
+        </div>
+
+        <div class="mt-3">
+            <ShopMap @key="_mapKey"
+                     Longitude="@_longitude"
+                     Latitude="@_latitude"
+                     Name="@L["Map:CurrentPoint"]"
+                     MarkerSelected="OnMapPointSelectedAsync"
+                     Markers="@_mapMarkers" />
+        </div>
+
+        @* 结果统计与"全选本页"：勾选跨页累计，全选只作用于当前页 *@
+        @if (_items.Count > 0)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                <span class="small text-muted">@L["Map:ResultCount"]：@_total</span>
+                <div class="d-flex align-items-center gap-3">
+                    @if (_selectedItems.Count > 0)
+                    {
+                        <span class="small text-primary fw-bold">@L["Map:SelectedCount", _selectedItems.Count]</span>
+                    }
+                    <label class="small mb-0">
+                        <input type="checkbox" checked="@AllSelected" @onchange="ToggleAllAsync" />
+                        @L["Map:SelectAllPage"]
+                    </label>
+                </div>
+            </div>
+        }
+
+        @if (_notice != null)
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                @_notice
+                @if (_noticeError != null)
+                {
+                    <div class="small mt-1">@_noticeError</div>
+                }
+            </div>
+        }
+
+        @if (_error != null)
+        {
+            <div class="alert alert-warning mt-3 mb-0">@_error</div>
+        }
+        else if (_items.Count > 0)
+        {
+            <div class="list-group mt-3" style="max-height:420px;overflow-y:auto;">
+                @foreach (var item in _items)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="d-flex gap-2">
+                            <input class="form-check-input mt-1"
+                                   type="checkbox"
+                                   checked="@IsSelected(item)"
+                                   @onchange="() => ToggleSelectedAsync(item)" />
+                            <div>
+                            <div class="fw-bold">@item.Name</div>
+                            <div class="small text-muted">@item.Address</div>
+                            @if (!string.IsNullOrWhiteSpace(item.Tel))
+                            {
+                                <div class="small text-muted">@item.Tel</div>
+                            }
+                            </div>
+                        </div>
+                        <span class="badge text-bg-light">@FormatDistance(item.DistanceMeters)</span>
+                    </div>
+                }
+            </div>
+        }
+
+        @* 分页控件：仅在本次搜索有匹配结果时显示，页码从 1 开始 *@
+        @if (_total > 0)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                <span class="small text-muted">@L["Map:PageInfo", _page, TotalPages, _total]</span>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-muted mb-0 d-flex align-items-center gap-1">
+                        @L["Map:PageSize"]
+                        <select class="form-select form-select-sm w-auto" disabled="@_loading" @bind="_pageSize" @bind:after="ReloadFirstPageAsync">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                        </select>
+                    </label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_loading || _page <= 1)" @onclick="PreviousPageAsync">@L["Map:Previous"]</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_loading || !HasNextPage)" @onclick="NextPageAsync">@L["Map:Next"]</button>
+                </div>
+            </div>
+        }
+
+        @if ((AllowTemporaryWheel || AllowBatchAdd) && (_items.Count > 0 || _selectedItems.Count > 0))
+        {
+            <div class="mt-2 d-flex gap-2">
+                @if (AllowTemporaryWheel)
+                {
+                    <button type="button" class="btn btn-outline-primary" disabled="@(_selectedItems.Count == 0)" @onclick="AddToWheelAsync">
+                        @L["Map:AddToWheel"] (@_selectedItems.Count)
+                    </button>
+                }
+                @if (AllowBatchAdd)
+                {
+                    <button type="button" class="btn btn-primary" disabled="@(_selectedItems.Count == 0 || _batchLoading)" @onclick="BatchAddAsync">
+                        @(_batchLoading ? L["Map:Adding"] : L["Map:BatchAdd"]) (@_selectedItems.Count)
+                    </button>
+                }
+            </div>
+        }
+    </CardBody>
+</Card>
+
+@code {
+    /// <summary>读不到服务端默认位置时使用的兜底坐标（广州中山大学南校园）。</summary>
+    private const double FallbackLongitude = 113.29333296470047;
+    private const double FallbackLatitude = 23.092111684726483;
+
+    /// <summary>默认每页条数，与项目其他列表保持一致；上限受高德周边搜索单页 25 条限制。</summary>
+    private const int DefaultPageSize = 20;
+
+    /// <summary>高德前端模块路径，相对应用根路径。</summary>
+    private const string AmapModulePath = "./global-scripts.js";
+
+    private string _keywords = "餐厅";
+    private int _radius = 3000;
+    private double _longitude = FallbackLongitude;
+    private double _latitude = FallbackLatitude;
+    private int _mapKey;
+    private bool _loading;
+    private string? _error;
+    private bool _batchLoading;
+
+    /// <summary>服务端配置的默认搜索中心经度（Integration:Gaode:DefaultLongitude）。</summary>
+    private double _defaultLongitude = FallbackLongitude;
+
+    /// <summary>服务端配置的默认搜索中心纬度（Integration:Gaode:DefaultLatitude）。</summary>
+    private double _defaultLatitude = FallbackLatitude;
+
+    /// <summary>服务端配置的默认位置名称，仅用于界面提示。</summary>
+    private string? _defaultLocationName;
+
+    /// <summary>浏览器本地是否保存了默认位置；保存后优先于服务端配置。</summary>
+    private bool _hasLocalDefault;
+
+    /// <summary>服务端默认位置的加载任务，在首渲染后 await，避免与生命周期竞态。</summary>
+    private Task<MapDefaultLocationDto?>? _defaultsTask;
+
+    /// <summary>批量新增结果提示（成功/跳过/失败计数）。</summary>
+    private string? _notice;
+
+    /// <summary>批量新增的首条失败原因，随结果提示一起展示。</summary>
+    private string? _noticeError;
+
+    /// <summary>缓存的高德前端模块引用。</summary>
+    private IJSObjectReference? _amapModule;
+
+    /// <summary>当前页的搜索结果；翻页时整体替换。</summary>
+    private List<NearbyPoiDto> _items = [];
+
+    /// <summary>当前页码，从 1 开始。</summary>
+    private int _page = 1;
+
+    /// <summary>每页条数，仅允许高德上限内的取值。</summary>
+    private int _pageSize = DefaultPageSize;
+
+    /// <summary>本次搜索的匹配总数（高德 v3 的真实总数），用于计算总页数。</summary>
+    private long _total;
+
+    /// <summary>跨页累计的已选 POI，按勾选顺序保存，供加入转盘 / 批量新增使用。</summary>
+    private readonly List<NearbyPoiDto> _selectedItems = [];
+
+    /// <summary>已选 POI 的 PoiId 索引，用于 O(1) 判断勾选状态。</summary>
+    private readonly HashSet<string> _selectedIds = new(StringComparer.Ordinal);
+
+    /// <summary>是否显示首页临时加入转盘按钮。</summary>
+    [Parameter]
+    public bool AllowTemporaryWheel { get; set; }
+
+    /// <summary>是否显示店铺库批量新增按钮。</summary>
+    [Parameter]
+    public bool AllowBatchAdd { get; set; }
+
+    /// <summary>临时加入转盘回调。</summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<NearbyPoiDto>> TemporaryWheelAdded { get; set; }
+
+    /// <summary>批量新增完成回调。</summary>
+    [Parameter]
+    public EventCallback BatchAdded { get; set; }
+
+    [Inject]
+    private IShopAppService ShopAppService { get; set; } = default!;
+
+    /// <summary>地图上显示的当前位置与当前页搜索结果标点。</summary>
+    private IReadOnlyList<MapMarkerDto> _mapMarkers =
+    [
+        new MapMarkerDto
+        {
+            Longitude = FallbackLongitude,
+            Latitude = FallbackLatitude,
+            Name = string.Empty
+        }
+    ];
+
+    /// <summary>总页数；无匹配结果时按 1 页展示，避免出现 0 页。</summary>
+    private int TotalPages => _total <= 0 ? 1 : (int)((_total + _pageSize - 1) / _pageSize);
+
+    /// <summary>
+    /// 是否还有下一页：以高德返回的真实总数为准；
+    /// 当前页已满时额外放行，避免总数声明偏小或缺失时把"下一页"永久禁用。
+    /// </summary>
+    private bool HasNextPage => _page < TotalPages || _items.Count >= _pageSize;
+
+    /// <summary>
+    /// 只启动服务端默认位置的加载，不在续体里改搜索中心。
+    /// 原因：<c>OnInitializedAsync</c> 的续体可能在首渲染之后才执行，会把
+    /// <c>OnAfterRenderAsync</c> 里刚应用的本地默认位置覆盖掉（异步生命周期竞态）。
+    /// 所有搜索中心赋值统一放在 <c>OnAfterRenderAsync</c>。
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        _defaultsTask = LoadDefaultLocationAsync();
+    }
+
+    /// <summary>
+    /// 首渲染后按"本地默认位置优先、服务端配置兜底"解析搜索中心，然后刷新地图标点。
+    /// 放在这里是因为预渲染阶段没有 JS 运行时，localStorage 读不到。
+    /// </summary>
+    /// <param name="firstRender">是否为首次渲染</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // 1. 取服务端配置的默认位置（只影响"默认位置"提示与本地未设置时的兜底）
+        var defaults = _defaultsTask is null ? null : await _defaultsTask;
+        if (defaults is not null)
+        {
+            _defaultLongitude = defaults.Longitude;
+            _defaultLatitude = defaults.Latitude;
+            _defaultLocationName = defaults.Name;
+        }
+
+        // 2. 浏览器本地设置过默认位置时优先使用
+        try
+        {
+            _amapModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", AmapModulePath);
+            var local = await _amapModule.InvokeAsync<BrowserPosition?>("getDefaultCenter");
+            if (local is not null)
+            {
+                _hasLocalDefault = true;
+                _longitude = local.Longitude;
+                _latitude = local.Latitude;
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // 页面已卸载，忽略。
+        }
+        catch (InvalidOperationException)
+        {
+            // 预渲染阶段没有 JS 运行时，忽略。
+        }
+
+        // 3. 本地未设置时用服务端配置兜底
+        if (!_hasLocalDefault)
+        {
+            _longitude = _defaultLongitude;
+            _latitude = _defaultLatitude;
+        }
+
+        UpdateMapMarkers();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// 读取服务端配置的默认搜索中心；失败返回 null，由兜底坐标接管。
+    /// </summary>
+    /// <returns>服务端默认位置；不可用时为 null</returns>
+    private async Task<MapDefaultLocationDto?> LoadDefaultLocationAsync()
+    {
+        try
+        {
+            return await MapAppService.GetDefaultLocationAsync();
+        }
+        catch (Exception)
+        {
+            // 服务端默认位置不可用时保留代码内兜底坐标，不影响搜索功能。
+            return null;
+        }
+    }
+
+    /// <summary>提交搜索：校验关键字后从第一页开始查询。</summary>
+    private async Task SearchAsync()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(_keywords))
+        {
+            _error = L["Map:KeywordsRequired"].Value;
+            return;
+        }
+
+        // 搜索条件变化后旧结果全部失效，清空跨页勾选避免误把上一批结果加入转盘/店铺库。
+        ClearSelection();
+        await LoadPageAsync(1);
+    }
+
+    /// <summary>请求指定页的搜索结果，并刷新地图标点。</summary>
+    /// <param name="page">从 1 开始的目标页码。</param>
+    private async Task LoadPageAsync(int page)
+    {
+        _loading = true;
+        _error = null;
+        _items = [];
+
+        try
+        {
+            var result = await MapAppService.SearchNearbyAsync(new NearbySearchInput
+            {
+                Keywords = _keywords.Trim(),
+                Longitude = _longitude,
+                Latitude = _latitude,
+                Radius = _radius,
+                SkipCount = (page - 1) * _pageSize,
+                MaxResultCount = _pageSize
+            });
+
+            _items = result.Items.ToList();
+            _total = result.TotalCount;
+            _page = page;
+
+            if (_items.Count == 0)
+            {
+                // 首页为空是"附近没有结果"，后续页为空说明高德实际可返回的条数少于 count 声明的总数。
+                _error = page > 1 ? L["Map:NoMoreResults"].Value : L["Map:NoNearbyResults"].Value;
+            }
+
+            UpdateMapMarkers();
+        }
+        catch (Exception ex)
+        {
+            _items = [];
+            _total = 0;
+            _page = 1;
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>切换每页条数后回到第一页重新查询。</summary>
+    private async Task ReloadFirstPageAsync()
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        await LoadPageAsync(1);
+    }
+
+    /// <summary>仅在非忙碌且存在上一页时请求上一页。</summary>
+    private async Task PreviousPageAsync()
+    {
+        if (!_loading && _page > 1)
+        {
+            await LoadPageAsync(_page - 1);
+        }
+    }
+
+    /// <summary>仅在非忙碌且存在下一页时请求下一页。</summary>
+    private async Task NextPageAsync()
+    {
+        if (!_loading && HasNextPage)
+        {
+            await LoadPageAsync(_page + 1);
+        }
+    }
+
+    /// <summary>把当前搜索中心保存为浏览器本地默认位置。</summary>
+    private async Task SetAsDefaultAsync()
+    {
+        _error = null;
+        try
+        {
+            _amapModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", AmapModulePath);
+            var saved = await _amapModule.InvokeAsync<bool>(
+                "setDefaultCenter",
+                new BrowserPosition { Longitude = _longitude, Latitude = _latitude });
+
+            _hasLocalDefault = saved;
+            _notice = L["Map:DefaultSaved"].Value;
+            _noticeError = null;
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>恢复默认位置：清除本地覆盖并回到服务端配置的默认中心。</summary>
+    private async Task RestoreDefaultAsync()
+    {
+        _error = null;
+        try
+        {
+            _amapModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", AmapModulePath);
+            await _amapModule.InvokeVoidAsync("clearDefaultCenter");
+        }
+        catch (Exception)
+        {
+            // 清除本地默认失败不影响把搜索中心恢复为服务端配置。
+        }
+
+        _hasLocalDefault = false;
+        _longitude = _defaultLongitude;
+        _latitude = _defaultLatitude;
+        ResetResults();
+        _notice = L["Map:DefaultRestored"].Value;
+        _noticeError = null;
+    }
+
+    /// <summary>请求浏览器定位，并将定位结果作为新的搜索中心。</summary>
+    private async Task LocateAsync()
+    {
+        _error = null;
+        try
+        {
+            _amapModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", AmapModulePath);
+            var position = await _amapModule.InvokeAsync<BrowserPosition>("getCurrentPosition");
+            _longitude = position.Longitude;
+            _latitude = position.Latitude;
+            ResetResults();
+        }
+        catch (JSException)
+        {
+            // 定位失败通常是权限被拒或浏览器不支持，给出可操作的本地化提示而不是内部错误。
+            _error = L["Map:LocateFailed"].Value;
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+    }
+
+    /// <summary>接收地图点击位置并更新搜索中心。</summary>
+    private Task OnMapPointSelectedAsync(MapMarkerDto marker)
+    {
+        _longitude = marker.Longitude;
+        _latitude = marker.Latitude;
+        ResetResults();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>搜索中心变化后清空结果、分页状态与跨页勾选。</summary>
+    private void ResetResults()
+    {
+        _items = [];
+        _total = 0;
+        _page = 1;
+        ClearSelection();
+        UpdateMapMarkers();
+    }
+
+    /// <summary>刷新地图标点，保留当前位置标记并追加当前页搜索结果。</summary>
+    private void UpdateMapMarkers()
+    {
+        _mapMarkers = new List<MapMarkerDto>
+        {
+            new()
+            {
+                Longitude = _longitude,
+                Latitude = _latitude,
+                Name = L["Map:CurrentLocation"].Value
+            }
+        };
+        _mapMarkers = _mapMarkers.Concat(_items).Cast<MapMarkerDto>().ToList();
+        _mapKey++;
+    }
+
+    /// <summary>判断结果是否已选中（按 PoiId 跨页判断）。</summary>
+    private bool IsSelected(NearbyPoiDto item) => !string.IsNullOrWhiteSpace(item.Id) && _selectedIds.Contains(item.Id!);
+
+    /// <summary>当前页是否已全部选中。</summary>
+    private bool AllSelected => _items.Count > 0 && _items.All(IsSelected);
+
+    /// <summary>全选或取消全选当前页；跨页已选项不受影响。</summary>
+    private Task ToggleAllAsync(ChangeEventArgs args)
+    {
+        var select = args.Value is true or "true";
+        foreach (var item in _items)
+        {
+            if (select)
+            {
+                AddSelection(item);
+            }
+            else
+            {
+                RemoveSelection(item);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>切换单条搜索结果的选中状态。</summary>
+    private Task ToggleSelectedAsync(NearbyPoiDto item)
+    {
+        if (string.IsNullOrWhiteSpace(item.Id))
+        {
+            return Task.CompletedTask;
+        }
+
+        if (_selectedIds.Contains(item.Id!))
+        {
+            RemoveSelection(item);
+        }
+        else
+        {
+            AddSelection(item);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>把一条 POI 加入跨页选择集合；无 PoiId 或已存在时忽略。</summary>
+    private void AddSelection(NearbyPoiDto item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.Id) && _selectedIds.Add(item.Id!))
+        {
+            _selectedItems.Add(item);
+        }
+    }
+
+    /// <summary>把一条 POI 移出跨页选择集合。</summary>
+    private void RemoveSelection(NearbyPoiDto item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.Id) && _selectedIds.Remove(item.Id!))
+        {
+            _selectedItems.RemoveAll(selected => string.Equals(selected.Id, item.Id, StringComparison.Ordinal));
+        }
+    }
+
+    /// <summary>清空跨页选择集合。</summary>
+    private void ClearSelection()
+    {
+        _selectedItems.Clear();
+        _selectedIds.Clear();
+    }
+
+    /// <summary>将跨页勾选的 POI 追加交给首页转盘；交给后清空勾选，避免重复点击重复加入。</summary>
+    private async Task AddToWheelAsync()
+    {
+        var added = _selectedItems.Count;
+        await TemporaryWheelAdded.InvokeAsync(_selectedItems.ToList());
+        ClearSelection();
+        _notice = string.Format(L["Map:AddedToWheel"].Value, added);
+        _noticeError = null;
+    }
+
+    /// <summary>将跨页勾选的 POI 批量写入店铺库。</summary>
+    private async Task BatchAddAsync()
+    {
+        _batchLoading = true;
+        _error = null;
+        _notice = null;
+        _noticeError = null;
+        try
+        {
+            var inputs = _selectedItems.Select(item => new CreateUpdateShopDto
+            {
+                Name = item.Name,
+                Address = item.Address,
+                Phone = item.Tel,
+                // 高德 POI 自带坐标，原样带入门店库，避免地址解析偏差（FR-M-04）
+                Longitude = ToNullableCoordinate(item.Longitude),
+                Latitude = ToNullableCoordinate(item.Latitude),
+                IsEnabled = true,
+                Weight = 1
+            }).ToList();
+            var result = await ShopAppService.BatchCreateAsync(inputs);
+            _notice = string.Format(
+                L["Map:BatchAddResult"].Value,
+                result.CreatedCount,
+                result.SkippedCount,
+                result.Errors.Count);
+            _noticeError = result.Errors.FirstOrDefault();
+            ClearSelection();
+            await BatchAdded.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _batchLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// 把 POI 坐标转换为可空值：0 表示高德未返回坐标，不能当作有效经纬度写入门店库。
+    /// </summary>
+    /// <param name="value">POI 坐标分量</param>
+    /// <returns>有效时返回原值，否则返回 null</returns>
+    private static double? ToNullableCoordinate(double value)
+    {
+        return value == 0d ? null : value;
+    }
+
+    /// <summary>释放高德前端模块引用。</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_amapModule is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _amapModule.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // 页面已卸载，JS 互操作通道不可用，无需处理。
+        }
+        catch (TaskCanceledException)
+        {
+            // 同上：渲染器已停止。
+        }
+    }
+
+    /// <summary>格式化 POI 与当前位置的直线距离。</summary>
+    private static string FormatDistance(double distanceMeters)
+    {
+        return distanceMeters < 1000
+            ? $"{distanceMeters:0} m"
+            : $"{distanceMeters / 1000:0.##} km";
+    }
+
+    /// <summary>浏览器返回的当前位置。</summary>
+    private sealed class BrowserPosition
+    {
+        public double Longitude { get; set; }
+        public double Latitude { get; set; }
+    }
+}

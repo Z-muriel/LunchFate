@@ -11,6 +11,7 @@ using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.SettingManagement.Blazor.Menus;
 using Volo.Abp.TenantManagement.Blazor.Navigation;
 using Volo.Abp.Identity.Blazor;
+using Volo.Abp.Identity;
 
 namespace LunchFate.Blazor.Client.Navigation;
 
@@ -56,6 +57,22 @@ public class LunchFateMenuContributor : IMenuContributor
             icon: "fas fa-home",
             order: 1
         ));
+
+        // 本人记录只要求登录，全部记录的访问范围由服务端独立校验。
+        context.Menu.AddItem(new ApplicationMenuItem(
+            LunchFateMenus.DrawRecords, l["Menu:DrawRecords"], "/records/draws",
+            icon: "fas fa-history", order: 2).RequireAuthenticated());
+        context.Menu.AddItem(new ApplicationMenuItem(
+            LunchFateMenus.ShopCreationRecords, l["Menu:ShopCreationRecords"], "/records/shop-creations",
+            icon: "fas fa-clipboard-list", order: 3).RequireAuthenticated());
+
+        if (await context.IsGrantedAsync(IdentityPermissions.Users.Default) &&
+            await context.IsGrantedAsync(IdentityPermissions.Users.ManagePermissions))
+        {
+            administration.AddItem(new ApplicationMenuItem(
+                LunchFateMenus.Permissions, l["Menu:Permissions"], "/permissions",
+                icon: "fas fa-user-shield", order: 4));
+        }
 
         //MultiTenancyConsts.IsEnabled 是编译期常量，此处按其取值直接排序。
         if (MultiTenancyConsts.IsEnabled)

@@ -1,0 +1,245 @@
+@* 地图标点组件（FR-M-06）：用高德 JS API 渲染店铺位置标点 *@
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@using LunchFate.Maps
+@using System.Collections.Generic
+@using System.Linq
+@inherits LunchFateComponentBase
+
+@* 地图容器常驻渲染树：高德会往容器内部注入自己的 DOM，
+   容器本身不能被条件块包裹，否则重渲染时会连带清掉已渲染的地图。 *@
+<div id="@_mapId" class="shop-map" style="width:100%;height:300px;"></div>
+
+@if (!_mapReady)
+{
+    <div class="text-muted small p-2">
+        @if (!string.IsNullOrEmpty(Address))
+        {
+            @Address
+        }
+        else
+        {
+            @L["Map:Coordinate", Longitude ?? 0d, Latitude ?? 0d]
+        }
+    </div>
+}
+
+@if (_mapFailed)
+{
+    <div class="text-warning small p-2">@L["Map:RenderFailed"]</div>
+}
+
+@code {
+    /// <summary>店铺经度。</summary>
+    [Parameter]
+    public double? Longitude { get; set; }
+
+    /// <summary>店铺纬度。</summary>
+    [Parameter]
+    public double? Latitude { get; set; }
+
+    /// <summary>店铺名称（用于标点标签）。</summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>地址文本（地图加载失败时降级显示）。</summary>
+    [Parameter]
+    public string? Address { get; set; }
+
+    /// <summary>多个地图标点；为空时使用单个经纬度参数。</summary>
+    [Parameter]
+    public IReadOnlyList<MapMarkerDto>? Markers { get; set; }
+
+    /// <summary>地图点击选点回调。</summary>
+    [Parameter]
+    public EventCallback<MapMarkerDto> MarkerSelected { get; set; }
+
+    /// <summary>高德前端模块路径，相对应用根路径。</summary>
+    private const string ModulePath = "./global-scripts.js";
+
+    /// <summary>地图是否已渲染完成。</summary>
+    private bool _mapReady;
+
+    /// <summary>已配置 Key 但渲染失败；用于给出可诊断的降级提示。</summary>
+    private bool _mapFailed;
+
+    /// <summary>是否存在待处理的渲染请求（首渲染或标点变化）。</summary>
+    private bool _renderRequested = true;
+
+    /// <summary>最近一次实际尝试渲染的标点签名，避免重渲染导致重复初始化或死循环。</summary>
+    private string? _attemptedSignature;
+
+    /// <summary>缓存的高德前端模块引用，重复使用不重复下载。</summary>
+    private IJSObjectReference? _module;
+
+    /// <summary>地图点击回调的 .NET 引用。</summary>
+    private DotNetObjectReference<ShopMap>? _selfReference;
+
+    private readonly string _mapId = $"shop-map-{Guid.NewGuid():N}";
+
+    /// <summary>
+    /// 参数变化时请求重新渲染，保证标点与当前搜索结果一致。
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(BuildSignature(), _attemptedSignature, StringComparison.Ordinal))
+        {
+            _renderRequested = true;
+        }
+    }
+
+    /// <summary>
+    /// 按需加载高德前端模块并渲染标点；无 Key、无坐标时降级为地址文本，渲染异常时给出提示。
+    /// </summary>
+    /// <param name="firstRender">是否为首次渲染</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_renderRequested)
+        {
+            return;
+        }
+
+        _renderRequested = false;
+        _attemptedSignature = BuildSignature();
+
+        var markers = BuildMarkers();
+        if (markers.Count == 0)
+        {
+            return;
+        }
+
+        // InteractiveAuto 首屏在服务端渲染，随后的交互式会话在 WASM 渲染：
+        // 两种渲染模式读取各自 appsettings.json，因此 Integration:Gaode 必须同时配置在
+        // LunchFate.Blazor 与 LunchFate.Blazor.Client 两份 appsettings.json 中。
+        var jsApiKey = Configuration["Integration:Gaode:JsApiKey"];
+        if (string.IsNullOrWhiteSpace(jsApiKey))
+        {
+            // 没有 Key 时按 FR-M-06 降级为地址文本，但必须留下可诊断痕迹，否则"地图不渲染"无从排查。
+            await TryLogAsync(new InvalidOperationException(
+                "未配置 Integration:Gaode:JsApiKey，地图区域降级为地址文本。"));
+            return;
+        }
+
+        var stateChanged = false;
+        try
+        {
+            _module ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            await _module.InvokeVoidAsync(
+                "loadAmap",
+                jsApiKey,
+                Configuration["Integration:Gaode:SecurityJsCode"]);
+
+            _selfReference ??= MarkerSelected.HasDelegate ? DotNetObjectReference.Create(this) : null;
+            await _module.InvokeVoidAsync("renderShopMap", _mapId, markers, _selfReference);
+
+            if (!_mapReady || _mapFailed)
+            {
+                _mapReady = true;
+                _mapFailed = false;
+                stateChanged = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (_mapReady || !_mapFailed)
+            {
+                _mapReady = false;
+                _mapFailed = true;
+                stateChanged = true;
+            }
+
+            await TryLogAsync(ex);
+        }
+
+        if (stateChanged)
+        {
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>接收 JavaScript 返回的地图点击坐标。</summary>
+    /// <param name="marker">点击位置</param>
+    [JSInvokable]
+    public async Task SelectMarkerAsync(MapMarkerDto marker)
+    {
+        if (MarkerSelected.HasDelegate)
+        {
+            await MarkerSelected.InvokeAsync(marker);
+        }
+    }
+
+    /// <summary>释放地图点击回调与前端模块引用。</summary>
+    public async ValueTask DisposeAsync()
+    {
+        _selfReference?.Dispose();
+
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // 页面已卸载，JS 互操作通道不可用，无需处理。
+            }
+            catch (TaskCanceledException)
+            {
+                // 同上：渲染器已停止。
+            }
+        }
+    }
+
+    /// <summary>
+    /// 汇总待渲染标点：优先使用显式标点集合，否则回退到单个经纬度参数。
+    /// </summary>
+    /// <returns>待渲染的标点列表</returns>
+    private List<MapMarkerDto> BuildMarkers()
+    {
+        var markers = Markers?.ToList() ?? [];
+        if (markers.Count == 0 && Longitude.HasValue && Latitude.HasValue)
+        {
+            markers.Add(new MapMarkerDto
+            {
+                Longitude = Longitude.Value,
+                Latitude = Latitude.Value,
+                Name = Name ?? string.Empty,
+                Address = Address
+            });
+        }
+
+        return markers;
+    }
+
+    /// <summary>
+    /// 生成标点签名，用于判断是否需要重新渲染地图。
+    /// </summary>
+    /// <returns>标点签名</returns>
+    private string BuildSignature()
+    {
+        return string.Join(
+            ';',
+            BuildMarkers().Select(marker => $"{marker.Longitude:F6},{marker.Latitude:F6},{marker.Name}"));
+    }
+
+    /// <summary>
+    /// 把渲染失败原因写入浏览器控制台，便于现场排查；控制台不可用时忽略。
+    /// </summary>
+    /// <param name="ex">渲染异常</param>
+    private async Task TryLogAsync(Exception ex)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("console.warn", $"[ShopMap] 地图渲染失败：{ex.Message}");
+        }
+        catch (JSDisconnectedException)
+        {
+            // 页面已卸载，忽略。
+        }
+        catch (InvalidOperationException)
+        {
+            // 预渲染阶段没有 JS 运行时，忽略。
+        }
+    }
+}

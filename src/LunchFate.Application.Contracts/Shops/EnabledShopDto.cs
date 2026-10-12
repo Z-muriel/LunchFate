@@ -19,4 +19,10 @@ public class EnabledShopDto : EntityDto<Guid>
 
     /// <summary>地址，可空。</summary>
     public string? Address { get; set; }
+
+    /// <summary>经度（GCJ-02），可空。用于导航按钮（FR-M-03）。</summary>
+    public double? Longitude { get; set; }
+
+    /// <summary>纬度（GCJ-02），可空。用于导航按钮（FR-M-03）。</summary>
+    public double? Latitude { get; set; }
 }

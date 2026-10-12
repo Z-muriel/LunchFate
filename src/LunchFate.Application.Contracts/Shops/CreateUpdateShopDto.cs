@@ -21,6 +21,19 @@ public class CreateUpdateShopDto
     [StringLength(ShopConsts.MaxAddressLength)]
     public string? Address { get; set; }
 
+    /// <summary>
+    /// 经度（GCJ-02），可空。仅用于把地图 POI 的已知坐标原样带入门店库；
+    /// 未提供时由服务端按地址地理编码补齐（需求文档 FR-M-01）。
+    /// </summary>
+    [Range(-180d, 180d)]
+    public double? Longitude { get; set; }
+
+    /// <summary>
+    /// 纬度（GCJ-02），可空。与 <see cref="Longitude"/> 必须同时提供，只提供其一时忽略并由服务端地理编码补齐。
+    /// </summary>
+    [Range(-90d, 90d)]
+    public double? Latitude { get; set; }
+
     /// <summary>联系电话，可空。</summary>
     [StringLength(ShopConsts.MaxPhoneLength)]
     public string? Phone { get; set; }

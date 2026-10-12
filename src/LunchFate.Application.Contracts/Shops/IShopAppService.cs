@@ -20,4 +20,12 @@ public interface IShopAppService :
     /// 大转盘数据源：仅返回已启用的店铺（需求文档 FR-W-01）。
     /// </summary>
     Task<ListResultDto<EnabledShopDto>> GetEnabledListAsync();
+
+    /// <summary>
+    /// 批量新增店铺；重复名称跳过，其余项目继续处理。
+    /// 空集合或超过单批上限时抛出 <c>UserFriendlyException</c>，不静默截断入参。
+    /// </summary>
+    /// <param name="inputs">店铺新增入参</param>
+    /// <returns>批量处理统计</returns>
+    Task<BatchCreateShopsResult> BatchCreateAsync(List<CreateUpdateShopDto> inputs);
 }

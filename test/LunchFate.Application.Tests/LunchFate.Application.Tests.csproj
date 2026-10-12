@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\LunchFate.Application\LunchFate.Application.csproj" />
     <ProjectReference Include="..\LunchFate.Domain.Tests\LunchFate.Domain.Tests.csproj" />
+    <ProjectReference Include="..\..\src\LunchFate.Integration\LunchFate.Integration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

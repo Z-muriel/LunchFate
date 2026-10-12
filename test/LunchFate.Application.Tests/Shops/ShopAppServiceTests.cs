@@ -1,31 +1,36 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using LunchFate.Shops;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Modularity;
+using Volo.Abp.Security.Claims;
 using Xunit;
 
 namespace LunchFate.Shops;
 
 /// <summary>
-/// 店铺应用服务测试（需求文档 AC-7：CRUD、权限与软删除的单元测试覆盖）。
-/// 与模板既有约定一致：本类为抽象类，具体用例由 EF Core 测试工程驱动（内存 SQLite）。
+/// 店铺应用服务测试，由 EF Core 测试工程驱动，每例独立设置已认证身份。
 /// </summary>
 public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplicationTestBase<TStartupModule>
     where TStartupModule : IAbpModule
 {
     private readonly IShopAppService _shopAppService;
 
+    /// <summary>
+    /// 在测试应用初始化及种子完成后解析服务，不修改种子使用的身份。
+    /// </summary>
     protected ShopAppServiceTests()
     {
         _shopAppService = GetRequiredService<IShopAppService>();
     }
 
+    /// <summary>验证已登录用户可以新增并读取店铺。</summary>
     [Fact]
     public async Task Should_Create_And_Get_Shop()
     {
+        using var principal = Login();
         var created = await _shopAppService.CreateAsync(NewShop("老王面馆"));
 
         created.Id.ShouldNotBe(Guid.Empty);
@@ -39,30 +44,33 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         fetched.Rating.ShouldBe(4.5m);
     }
 
+    /// <summary>验证未删除店铺不允许重复名称。</summary>
     [Fact]
     public async Task Should_Reject_Duplicate_Shop_Name()
     {
+        using var principal = Login();
         await _shopAppService.CreateAsync(NewShop("老王面馆"));
-
-        //同名（未删除）应被拒绝 —— 需求文档 §3.2
         await Should.ThrowAsync<UserFriendlyException>(() =>
             _shopAppService.CreateAsync(NewShop("老王面馆")));
     }
 
+    /// <summary>验证软删除后可以重新使用原名称。</summary>
     [Fact]
     public async Task Should_Allow_Recreating_Deleted_Shop_Name()
     {
+        using var principal = Login();
         var shop = await _shopAppService.CreateAsync(NewShop("老王面馆"));
         await _shopAppService.DeleteAsync(shop.Id);
 
-        //软删除后同名可再次创建 —— 需求文档 FR-S-04
         var recreated = await _shopAppService.CreateAsync(NewShop("老王面馆"));
         recreated.Id.ShouldNotBe(shop.Id);
     }
 
+    /// <summary>验证已软删除的店铺不能通过详情接口读取。</summary>
     [Fact]
     public async Task Should_Soft_Delete_Shop()
     {
+        using var principal = Login();
         var shop = await _shopAppService.CreateAsync(NewShop("老王面馆"));
         await _shopAppService.DeleteAsync(shop.Id);
 
@@ -70,9 +78,11 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
             () => _shopAppService.GetAsync(shop.Id));
     }
 
+    /// <summary>验证关键字、分类及启停状态筛选。</summary>
     [Fact]
     public async Task Should_Filter_Shops_By_Keyword_And_Status()
     {
+        using var principal = Login();
         await _shopAppService.CreateAsync(NewShop("老王面馆", ShopCategory.Noodles));
         await _shopAppService.CreateAsync(NewShop("轻食沙拉铺", ShopCategory.LightMeal, isEnabled: false));
 
@@ -101,21 +111,24 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         disabledOnly.Items.Single().Name.ShouldBe("轻食沙拉铺");
     }
 
+    /// <summary>验证转盘候选排除停用店铺。</summary>
     [Fact]
     public async Task Should_Only_Return_Enabled_Shops_To_Wheel()
     {
+        using var principal = Login();
         await _shopAppService.CreateAsync(NewShop("老王面馆", ShopCategory.Noodles));
         await _shopAppService.CreateAsync(NewShop("轻食沙拉铺", ShopCategory.LightMeal, isEnabled: false));
 
         var wheel = await _shopAppService.GetEnabledListAsync();
-
         wheel.Items.Count.ShouldBe(1);
         wheel.Items.Single().Name.ShouldBe("老王面馆");
     }
 
+    /// <summary>验证停用操作不删除店铺但会从转盘移除。</summary>
     [Fact]
     public async Task Should_Disable_Shop_Without_Removing_It()
     {
+        using var principal = Login();
         var shop = await _shopAppService.CreateAsync(NewShop("老王面馆"));
 
         await _shopAppService.UpdateAsync(shop.Id, new CreateUpdateShopDto
@@ -127,17 +140,17 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
 
         var list = await _shopAppService.GetListAsync(new ShopSearchInput { MaxResultCount = 100 });
         list.Items.Single(x => x.Id == shop.Id).IsEnabled.ShouldBeFalse();
-
         (await _shopAppService.GetEnabledListAsync()).Items.ShouldBeEmpty();
     }
 
+    /// <summary>验证非法排序回退及白名单内的降序排序。</summary>
     [Fact]
     public async Task Should_Fallback_To_Name_Asc_When_Sorting_Not_Whitelisted()
     {
+        using var principal = Login();
         await _shopAppService.CreateAsync(NewShop("B 店"));
         await _shopAppService.CreateAsync(NewShop("A 店"));
 
-        //非法排序字段必须回退为按名称升序（动态排序白名单，防止注入）
         var fallback = await _shopAppService.GetListAsync(new ShopSearchInput
         {
             Sorting = "Name; DROP TABLE AppShops --",
@@ -145,7 +158,6 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         });
         fallback.Items.Select(x => x.Name).ToArray().ShouldBe(new[] { "A 店", "B 店" });
 
-        //白名单内的合法降序排序应生效
         var descending = await _shopAppService.GetListAsync(new ShopSearchInput
         {
             Sorting = "Name desc",
@@ -154,20 +166,34 @@ public abstract class ShopAppServiceTests<TStartupModule> : LunchFateApplication
         descending.Items.Select(x => x.Name).ToArray().ShouldBe(new[] { "B 店", "A 店" });
     }
 
+    /// <summary>验证取消十二家上限后，二十家启用店铺全部返回且不重复。</summary>
     [Fact]
-    public async Task Should_Cap_Wheel_Shop_Count_At_MaxWheelSize()
+    public async Task Should_Return_All_Twenty_Enabled_Shops_To_Wheel()
     {
-        for (var i = 0; i < ShopConsts.MaxWheelSize + 1; i++)
+        using var principal = Login();
+        for (var i = 0; i < 20; i++)
         {
             await _shopAppService.CreateAsync(NewShop($"转盘店铺{i}"));
         }
 
-        //转盘数据源不得超过扇区数量上限（需求文档 FR-W-07）
         var wheel = await _shopAppService.GetEnabledListAsync();
-
-        wheel.Items.Count.ShouldBe(ShopConsts.MaxWheelSize);
+        wheel.Items.Count.ShouldBe(20);
+        wheel.Items.Select(x => x.Id).Distinct().Count().ShouldBe(20);
+        wheel.Items.Select(x => x.Name).OrderBy(x => x).ToArray()
+            .ShouldBe(Enumerable.Range(0, 20).Select(i => $"转盘店铺{i}").OrderBy(x => x).ToArray());
     }
 
+    /// <summary>为当前测试建立可释放的认证身份，避免污染其他测试及种子初始化。</summary>
+    private IDisposable Login()
+    {
+        return GetRequiredService<ICurrentPrincipalAccessor>().Change(new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(AbpClaimTypes.UserId, Guid.NewGuid().ToString()),
+            new Claim(AbpClaimTypes.UserName, "门店测试用户")
+        }, "Test")));
+    }
+
+    /// <summary>创建独立测试所需的合法店铺入参。</summary>
     private static CreateUpdateShopDto NewShop(
         string name,
         ShopCategory category = ShopCategory.Noodles,

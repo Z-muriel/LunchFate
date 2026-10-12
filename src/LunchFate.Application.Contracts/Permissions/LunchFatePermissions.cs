@@ -8,6 +8,16 @@ public static class LunchFatePermissions
     /// <summary>权限组名，同时作为顶级权限前缀。</summary>
     public const string GroupName = "LunchFate";
 
+    /// <summary>记录查看范围权限；本人记录只要求登录，不要求管理权限。</summary>
+    public static class Records
+    {
+        /// <summary>查看当前租户全部抽取记录。</summary>
+        public const string DrawsViewAll = GroupName + ".Records.DrawsViewAll";
+
+        /// <summary>查看当前租户全部门店添加记录。</summary>
+        public const string ShopCreationsViewAll = GroupName + ".Records.ShopCreationsViewAll";
+    }
+
     /// <summary>店铺管理（需求文档 §7）。</summary>
     public static class Shops
     {

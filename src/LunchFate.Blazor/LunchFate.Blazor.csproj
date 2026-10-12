@@ -32,6 +32,7 @@
     <ProjectReference Include="..\LunchFate.Blazor.Client\LunchFate.Blazor.Client.csproj" />
     <ProjectReference Include="..\LunchFate.HttpApi\LunchFate.HttpApi.csproj" />
     <ProjectReference Include="..\LunchFate.EntityFrameworkCore\LunchFate.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\LunchFate.Integration\LunchFate.Integration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -18,6 +18,12 @@ public class Shop : FullAuditedAggregateRoot<Guid>
     /// <summary>地址，可空。</summary>
     public string? Address { get; set; }
 
+    /// <summary>经度（GCJ-02 坐标系），可空。由高德地理编码服务自动填充。</summary>
+    public double? Longitude { get; set; }
+
+    /// <summary>纬度（GCJ-02 坐标系），可空。由高德地理编码服务自动填充。</summary>
+    public double? Latitude { get; set; }
+
     /// <summary>联系电话，可空。</summary>
     public string? Phone { get; set; }
 

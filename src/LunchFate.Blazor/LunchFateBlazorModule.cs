@@ -16,6 +16,7 @@ using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Server.AspNetCore;
 using LunchFate.Blazor.Client.Navigation;
 using LunchFate.EntityFrameworkCore;
+using LunchFate.Integration;
 using LunchFate.Localization;
 using LunchFate.MultiTenancy;
 using Microsoft.OpenApi;
@@ -56,6 +57,7 @@ namespace LunchFate.Blazor;
 [DependsOn(
     typeof(LunchFateApplicationModule),
     typeof(LunchFateEntityFrameworkCoreModule),
+    typeof(LunchFateIntegrationModule),
     typeof(LunchFateHttpApiModule),
     typeof(AbpAutofacModule),
     typeof(AbpSwashbuckleModule),
@@ -185,12 +187,12 @@ public class LunchFateBlazorModule : AbpModule
                 }
             );
 
+            // MVC 布局只加载开发期登录提示；global-scripts.js 是 ES 模块，
+            // 由 Blazor 组件按需 import，放进经典脚本包会因 export 语法报错。
             options.ScriptBundles.Configure(
                 BasicThemeBundles.Scripts.Global,
                 bundle =>
                 {
-                    bundle.AddFiles("/global-scripts.js");
-
                     if (hostingEnvironment.IsDevelopment())
                     {
                         bundle.AddFiles("/dev-login-helper.js");

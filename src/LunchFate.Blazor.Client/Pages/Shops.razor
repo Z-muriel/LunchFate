@@ -58,6 +58,11 @@
             </Column>
         </Row>
 
+        @if (_canCreate)
+        {
+            <NearbyShopSearch AllowBatchAdd="true" BatchAdded="ReloadAsync" />
+        }
+
         @if (!string.IsNullOrEmpty(_error))
         {
             <div class="alert alert-danger">@_error</div>
@@ -103,6 +108,22 @@
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.Address)"
                                 Caption="@L["Address"]" />
+                <DataGridColumn TItem="ShopDto" Caption="@L["Map"]">
+                    <DisplayTemplate>
+                        @if (context.Item.Longitude.HasValue && context.Item.Latitude.HasValue)
+                        {
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    @onclick="() => OpenMapModal(context.Item)">
+                                @L["ViewMap"]
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </DisplayTemplate>
+                </DataGridColumn>
                 <DataGridColumn TItem="ShopDto"
                                 Field="@nameof(ShopDto.IsEnabled)"
                                 Caption="@L["Status"]">
@@ -215,6 +236,25 @@
     </ModalContent>
 </Modal>
 
+@* 店铺地图弹窗（需求文档 FR-M-06） *@
+<Modal @ref="@_mapModal" Centered="true">
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>@_mapItem?.Name</ModalTitle>
+            <CloseButton Clicked="CloseMapModal" />
+        </ModalHeader>
+        <ModalBody>
+            @if (_mapItem != null)
+            {
+                <ShopMap Longitude="@_mapItem.Longitude"
+                         Latitude="@_mapItem.Latitude"
+                         Name="@_mapItem.Name"
+                         Address="@_mapItem.Address" />
+            }
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
 @* 删除二次确认弹窗（需求文档 FR-S-04） *@
 <Modal @ref="@_deleteModal" Centered="true">
     <ModalContent>
@@ -243,6 +283,7 @@
     private DataGrid<ShopDto>? _grid;
     private Modal? _formModal;
     private Modal? _deleteModal;
+    private Modal? _mapModal;
     private DataGridEntityActionsColumn<ShopDto>? _actionsColumn;
 
     /// <summary>当前弹窗是否为编辑模式；false 表示新增。</summary>
@@ -258,6 +299,9 @@
 
     /// <summary>待确认删除的店铺，null 表示删除弹窗未激活。</summary>
     private ShopDto? _deletingItem;
+
+    /// <summary>当前地图弹窗展示的店铺。</summary>
+    private ShopDto? _mapItem;
 
     /// <summary>是否拥有新增店铺权限；用于隐藏"新增店铺"按钮。</summary>
     private bool _canCreate;
@@ -275,7 +319,11 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        _canCreate = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Create);
+
+        // 服务端新增/批量新增同时要求"店铺管理"与"新增店铺"两项权限，
+        // 前端入口必须用同一条件判定，否则仅有新增权限的用户会看到必然 403 的入口。
+        _canCreate = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Default) &&
+            await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Create);
         _canEdit = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Edit);
         _canDelete = await AuthorizationService.IsGrantedAsync(LunchFatePermissions.Shops.Delete);
     }
@@ -474,6 +522,23 @@
     /// 关闭删除确认弹窗。
     /// </summary>
     private async Task CloseDeleteModal() => await _deleteModal!.Hide();
+
+    /// <summary>
+    /// 打开店铺地图弹窗；无坐标的店铺不会进入该方法。
+    /// </summary>
+    /// <param name="item">待查看地图的店铺</param>
+    private async Task OpenMapModal(ShopDto item)
+    {
+        _mapItem = item;
+        await _mapModal!.Show();
+    }
+
+    /// <summary>关闭店铺地图弹窗。</summary>
+    private async Task CloseMapModal()
+    {
+        await _mapModal!.Hide();
+        _mapItem = null;
+    }
 
     /// <summary>
     /// 执行软删除并刷新列表。

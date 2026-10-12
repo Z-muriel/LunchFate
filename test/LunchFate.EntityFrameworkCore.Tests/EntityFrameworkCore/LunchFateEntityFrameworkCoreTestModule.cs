@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LunchFate.Integration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Data;
@@ -14,6 +15,7 @@ namespace LunchFate.EntityFrameworkCore;
 [DependsOn(
     typeof(LunchFateApplicationTestModule),
     typeof(LunchFateEntityFrameworkCoreModule),
+    typeof(LunchFateIntegrationModule),
     typeof(AbpEntityFrameworkCoreSqliteModule)
 )]
 public class LunchFateEntityFrameworkCoreTestModule : AbpModule

@@ -13,4 +13,13 @@ public class LunchFateMenus
 
     /// <summary>店铺管理菜单。</summary>
     public const string Shops = Prefix + ".Shops";
+
+    /// <summary>用户权限管理入口。</summary>
+    public const string Permissions = Prefix + ".Permissions";
+
+    /// <summary>抽取记录菜单。</summary>
+    public const string DrawRecords = Prefix + ".DrawRecords";
+
+    /// <summary>门店添加记录菜单。</summary>
+    public const string ShopCreationRecords = Prefix + ".ShopCreationRecords";
 }

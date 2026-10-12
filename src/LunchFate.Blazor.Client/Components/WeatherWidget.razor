@@ -1,0 +1,60 @@
+@using LunchFate.Maps
+@* 天气组件（FR-M-05）：显示当日天气，雨雪天文案引导选近的店 *@
+@inject IMapAppService MapAppService
+@inherits LunchFateComponentBase
+
+@if (_loading)
+{
+    <div class="weather-widget text-muted small">@L["Weather:Loading"]</div>
+}
+else if (_weather != null)
+{
+    <div class="weather-widget small">
+        <span class="me-1">@_weather.Weather @_weather.Temperature°C</span>
+        @if (IsRainy(_weather.Weather))
+        {
+            <span class="text-info ms-1" title="@L["Weather:RainSnowTitle"]">🌧 @L["Weather:NearbyHint"]</span>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>高德天气接口的城市 adcode（FR-M-05 约定默认北京）。</summary>
+    private const string DefaultCityAdcode = "110000";
+
+    /// <summary>天气数据，null 表示未加载或加载失败。</summary>
+    private MapWeatherDto? _weather;
+
+    /// <summary>是否仍在加载天气。</summary>
+    private bool _loading = true;
+
+    /// <summary>
+    /// 初始化：加载默认城市天气；失败时静默隐藏，不影响主流程（FR-M-05 降级策略）。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _weather = await MapAppService.GetWeatherAsync(DefaultCityAdcode);
+        }
+        catch
+        {
+            // 天气服务不可用时静默降级：隐藏天气区域，不阻断转盘。
+            _weather = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>
+    /// 判断是否为雨雪天气。高德天气接口固定返回中文描述，因此按中文关键字匹配。
+    /// </summary>
+    /// <param name="weatherText">天气描述文本</param>
+    /// <returns>是否为雨雪天气</returns>
+    private static bool IsRainy(string weatherText)
+    {
+        return weatherText.Contains("雨") || weatherText.Contains("雪");
+    }
+}

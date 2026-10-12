@@ -25,7 +25,4 @@ public static class ShopConsts
 
     /// <summary>标签数量上限。</summary>
     public const int MaxTagsCount = 5;
-
-    /// <summary>参与大转盘抽取的扇区数量上限（需求文档 FR-W-07，P1 生效）。</summary>
-    public const int MaxWheelSize = 12;
 }

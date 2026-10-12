@@ -10,7 +10,7 @@ namespace LunchFate.Permissions;
 public class LunchFatePermissionDefinitionProvider : PermissionDefinitionProvider
 {
     /// <summary>
-    /// 注册权限组 <c>LunchFate</c> 及店铺管理的默认/增/改/删权限。
+    /// 注册权限组 <c>LunchFate</c>、店铺操作权限及两类当前租户全部记录查看权限。
     /// </summary>
     /// <param name="context">ABP 权限定义上下文</param>
     public override void Define(IPermissionDefinitionContext context)
@@ -21,6 +21,10 @@ public class LunchFatePermissionDefinitionProvider : PermissionDefinitionProvide
         shopsPermission.AddChild(LunchFatePermissions.Shops.Create, L("Permission:Shops.Create"));
         shopsPermission.AddChild(LunchFatePermissions.Shops.Edit, L("Permission:Shops.Edit"));
         shopsPermission.AddChild(LunchFatePermissions.Shops.Delete, L("Permission:Shops.Delete"));
+
+        // 本人记录无需额外授权；仅跨用户查看当前租户记录时要求明确授权。
+        myGroup.AddPermission(LunchFatePermissions.Records.DrawsViewAll, L("Permission:Records.DrawsViewAll"));
+        myGroup.AddPermission(LunchFatePermissions.Records.ShopCreationsViewAll, L("Permission:Records.ShopCreationsViewAll"));
     }
 
     /// <summary>

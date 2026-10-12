@@ -6,7 +6,7 @@ Repo: ABP Framework 10.6.1 layered "app" template on .NET 10 — Blazor Web App 
 
 ```bash
 dotnet build LunchFate.slnx                                   # currently 0 warnings / 0 errors — keep it that way
-dotnet test LunchFate.slnx --no-build                         # 12 tests, all in EntityFrameworkCore.Tests
+dotnet test LunchFate.slnx --no-build                         # 83 tests, all in EntityFrameworkCore.Tests
 dotnet test test/LunchFate.EntityFrameworkCore.Tests/LunchFate.EntityFrameworkCore.Tests.csproj --no-build \
   --filter "FullyQualifiedName~Should_Query_AppUser"          # single test
 dotnet run --project src/LunchFate.Blazor                     # https://localhost:44352, login admin / abc123!
@@ -20,22 +20,41 @@ abp install-libs                                              # after clone: www
 
 ## Tests
 
-- Only `test/LunchFate.EntityFrameworkCore.Tests` has runnable tests (12: 3 template samples + 9 shop tests). The other test projects print `没有可用测试` / "no tests available" and exit 0 — that's expected: their test classes are abstract; concrete tests live in the EF Core project. Shop tests are written once as `test/LunchFate.Application.Tests/Shops/ShopAppServiceTests.cs` and driven by `EfCoreShopAppServiceTests`.
-- EF tests run against **in-memory SQLite** (`AbpUnitTestSqliteDatabase` in `LunchFateEntityFrameworkCoreTestModule`) — no SQL Server needed.
+- Only `test/LunchFate.EntityFrameworkCore.Tests` has runnable tests (83: 3 template samples + shop CRUD + record persistence/authorization/tenant isolation + geocoding timing + mixed wheel candidates). The other test projects print `没有可用测试` / "no tests available" and exit 0 — that's expected: their test classes are abstract; concrete tests live in the EF Core project. Shared abstract suites live in `test/LunchFate.Application.Tests/` (`Shops/ShopAppServiceTests.cs`) and are driven by `EfCoreShopAppServiceTests`.
+- EF tests run against **in-memory SQLite** (`AbpUnitTestSqliteDatabase` in `LunchFateEntityFrameworkCoreTestModule`) — no SQL Server needed. Each test method gets a fresh container and DB, so service-replacing test modules (e.g. `LunchFateShopGeocodeTestModule`, `LunchFateRecordAuthorizationTestModule`) are safe.
 - The test host boots the full ABP module (seed data on startup, always-allow auth, background jobs disabled). EF tests share xUnit collection `"LunchFate collection"`.
+- Replacing a service in a test module: register the interface via a factory pointing at the concrete type (`AddSingleton<IGaodeMapService>(sp => sp.GetRequiredService<RecordingGaodeMapService>())`). A plain `AddSingleton<I, Impl>()` creates a **second** instance next to ABP's conventional registration, so the test would read an empty recorder.
 
 ## Layout / entry points
 
-- Layers in `src/`: Domain.Shared → Domain → Application.Contracts → Application → HttpApi / HttpApi.Client → EntityFrameworkCore → Blazor (+ Blazor.Client) → DbMigrator.
+- Layers in `src/`: Domain.Shared → Domain → Application.Contracts → Application → HttpApi / HttpApi.Client → EntityFrameworkCore → Integration → Blazor (+ Blazor.Client) → DbMigrator.
+- `src/LunchFate.Integration` is the only place allowed to talk to third-party HTTP services (currently 高德/Gaode). `LunchFateApplicationModule` declares `DependsOn(typeof(LunchFateIntegrationModule))` because `ShopAppService` injects `IGaodeMapService` — keep that dependency where the consumer lives, not only on the host.
 - Web entry: `src/LunchFate.Blazor/Program.cs` → `LunchFateBlazorModule`. Migration/console entry: `src/LunchFate.DbMigrator/Program.cs`.
 - Every csproj imports `common.props` (shared `LangVersion` / `Version` / `NoWarn(CS1591)` / `NuGetAudit` / `AbpProjectType`); `TargetFramework` is per-csproj (`net10.0`).
-- Three EF migrations exist: `20261010024930_Initial`, `20261010075123_AddShops` and `20261010094539_AddShopNameUniqueIndex`. The design-time factory (`LunchFateDbContextFactory.cs`) reads the connection string from `../LunchFate.DbMigrator/appsettings.json` (relative to the EF project dir) — edit that file, not the Blazor one, when changing the DB connection for migrations.
+- Six EF migrations exist: `20261010024930_Initial`, `20261010075123_AddShops`, `20261010094539_AddShopNameUniqueIndex`, `20261010103432_AddShopCoordinates`, `20261012031240_AddActivityRecords` (+ `LunchFateDbContextModelSnapshot`). Verify with `dotnet ef migrations has-pending-model-changes --project src/LunchFate.EntityFrameworkCore` (no `--no-connect` flag exists). The design-time factory (`LunchFateDbContextFactory.cs`) reads the connection string from `../LunchFate.DbMigrator/appsettings.json` (relative to the EF project dir) — edit that file, not the Blazor one, when changing the DB connection for migrations.
+
+## 高德地图集成（Gaode）
+
+- **三处配置，缺一处就有功能静默失效**（组件读不到 Key 只会降级，不会报错）：
+  1. `src/LunchFate.Blazor/appsettings.secrets.json`（gitignored，模板见 `appsettings.secrets.json.example`）→ `Integration:Gaode:Key`，Web 服务 Key，供服务端地理编码/POI/天气调用。
+  2. `src/LunchFate.Blazor/appsettings.json` → `Integration:Gaode:JsApiKey` / `SecurityJsCode`。
+  3. `src/LunchFate.Blazor.Client/wwwroot/appsettings.json` → 同样的 `JsApiKey` / `SecurityJsCode`。
+- **为什么 2 和 3 都要配**：`App.razor` 用 `InteractiveAuto`，首屏在服务端渲染（读服务端配置），之后的交互式会话在 WASM 渲染（读客户端 `wwwroot/appsettings.json`）。只配一份会导致"首次访问没地图、刷新后才有"。
+- `SecurityJsCode` 留空即可：2021-12-02 之前申请的高德 JS Key 不需要安全密钥；之后申请的必须填，否则高德报 `INVALID_USER_SCODE`（已实测当前 Key 不需要）。
+- `Integration:Gaode:AllowInvalidServerCertificate` 默认 `false`。仅在本机存在 TLS 拦截代理、且已确认风险时才在 `appsettings.Development.json` 打开。
+- **周边搜索用 v3 `/v3/place/around`，不要改回 v5**：v5 的 `count` 是本页条数（实测等于 `page_size`），前端算出的总页数恒为 1、"下一页"永远不可点；v3 的 `count` 才是真实总数，且直接返回 `distance`，`sortrule=distance` 保证跨页全局按距离升序。总数解析失败时集成层回退为"至少这么多、可能还有下一页"。
+- **附近搜索的默认中心**由服务端配置 `Integration:Gaode:DefaultLongitude/DefaultLatitude/DefaultLocationName` 提供，经 `IMapAppService.GetDefaultLocationAsync` 下发。**只配服务端**，浏览器端用 `localStorage`（键 `lunchfate.map.defaultCenter`，见 `global-scripts.js` 的 `getDefaultCenter`/`setDefaultCenter`/`clearDefaultCenter`）覆盖，避免再出现两份客户端配置不同步的问题。
+- **转盘候选是并集**：门店库启用门店 ∪ 已加入的附近门店，顺序固定为"门店库在前、附近在后"（`RecordAppService.DrawAsync` 按 `ShopIds` 顺序拼接 `TemporaryShops`）。客户端扇区必须按同一顺序排列，否则服务端返回的 `WinnerIndex` 会对不上扇区。加附近候选是**追加 + 按 PoiId 去重**，不要写成整体替换。
+- **`global-scripts.js` 是 ES 模块，不是经典脚本**：它 `export` 了 `loadAmap` / `getCurrentPosition` / `renderShopMap`，由 `ShopMap.razor`、`NearbyShopSearch.razor` 通过 `IJSRuntime` 的 `import` 按需加载。**不要**把它加回 `LunchFateBlazorModule` 的 MVC 脚本包，`export` 在经典脚本里会直接语法报错。MVC 侧（登录页）不需要它。
+- `ShopMap.razor` 的地图容器必须常驻渲染树（不能被 `@if` 包裹）：高德会往容器内注入自己的 DOM，条件渲染会在重渲染时把地图清掉。降级文案是容器的兄弟节点。
+- 排查"地图不渲染"的顺序：浏览器控制台（组件会把失败原因 `console.warn` 出来）→ 确认 `window.AMap` 是否已定义 → 确认两份 `appsettings.json` 的 `JsApiKey` → 确认高德 Key 的域名白名单包含当前站点。
 
 ## Gotchas
 
 - `src/LunchFate.Blazor/openiddict.pfx` + `AuthServer:CertificatePassPhrase` in its `appsettings.json` are required for the app to start (`AddProductionEncryptionAndSigningCertificate`). Don't delete either.
 - Scripts in `etc/scripts/` (`initialize-solution.ps1`, `migrate-database.ps1`) are the canonical setup steps ABP Studio uses; follow their CWD conventions.
 - Client-side deps live in `wwwroot/libs` and are gitignored — a fresh clone needs `abp install-libs` before the Blazor app will serve pages.
+- `LunchFate.slnx` must keep its `<Configurations><Platform Name="Any CPU" /></Configurations>` block; removing it changes how VS / ABP Studio load solution configurations.
 
 ## 开发规范要点（中文）
 

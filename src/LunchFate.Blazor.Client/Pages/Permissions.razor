@@ -1,0 +1,22 @@
+@page "/permissions"
+@using Volo.Abp.Identity
+@attribute [Authorize(IdentityPermissions.Users.Default)]
+@attribute [Authorize(IdentityPermissions.Users.ManagePermissions)]
+@inherits LunchFateComponentBase
+
+@* 复用 ABP 标准用户授权页面，避免自建接口绕过框架的用户与租户校验。 *@
+<Card>
+    <CardHeader><CardTitle>@L["Menu:Permissions"]</CardTitle></CardHeader>
+    <CardBody>
+        <p>@L["Permissions:Description"]</p>
+        <ol>
+            <li>@L["Permissions:StepUser"]</li>
+            <li>@L["Permissions:StepGrant"]</li>
+            <li>@L["Permissions:StepShop"]</li>
+        </ol>
+        <div class="alert alert-info">@L["Permissions:ScopeHint"]</div>
+        <a class="btn btn-outline-primary" href="/identity/users">@L["Permissions:ManageUsers"]</a>
+    </CardBody>
+</Card>
+
+<Volo.Abp.Identity.Blazor.Pages.Identity.UserManagement />

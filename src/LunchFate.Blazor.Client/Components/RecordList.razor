@@ -1,0 +1,292 @@
+@using System.Linq
+@using LunchFate.Permissions
+@using LunchFate.Records
+@using LunchFate.Shops
+@using Volo.Abp.Authorization
+@inject IRecordAppService RecordAppService
+@inherits LunchFateComponentBase
+
+<Card>
+    <CardHeader>
+        <CardTitle>@L[IsDraw ? "Records:DrawsTitle" : "Records:ShopCreationsTitle"]</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <form @onsubmit="SearchAsync" @onsubmit:preventDefault>
+            <fieldset disabled="@_loading" class="mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label" for="recordKeyword">@L["Records:Keyword"]</label>
+                        <input id="recordKeyword" type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="recordFromDate">@L["Records:FromDate"]</label>
+                        <input id="recordFromDate" type="date" class="form-control" @bind="_fromDate" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="recordToDate">@L["Records:ToDate"]</label>
+                        <input id="recordToDate" type="date" class="form-control" @bind="_toDate" />
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">@L["Search"]</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="ResetAsync">@L["Reset"]</button>
+                    </div>
+                </div>
+                @if (_canViewAll)
+                {
+                    <div class="form-check mt-3">
+                        <input id="recordIncludeAll" type="checkbox" class="form-check-input" @bind="_includeAll" @bind:after="SearchAsync" />
+                        <label class="form-check-label" for="recordIncludeAll">@L["Records:IncludeAll"]</label>
+                    </div>
+                }
+            </fieldset>
+        </form>
+
+        <p class="text-muted">@L[_search.IncludeAll ? "Records:AllHint" : "Records:MineHint"]</p>
+
+        @if (_error != null)
+        {
+            <div class="alert alert-danger" role="alert">@_error</div>
+        }
+
+        <div aria-busy="@_loading">
+            @if (_loading)
+            {
+                <p class="text-muted" role="status">@L["Records:Loading"]</p>
+            }
+            else if (_error == null && _rows.Count == 0)
+            {
+                <p class="text-muted" role="status">@L["Records:Empty"]</p>
+            }
+            else if (_rows.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col">@L["Records:Time"]</th>
+                                <th scope="col">@L["Records:User"]</th>
+                                <th scope="col">@L["Name"]</th>
+                                <th scope="col">@L["Address"]</th>
+                                <th scope="col">@L["Category"]</th>
+                                <th scope="col">@L["AveragePrice"]</th>
+                                @if (IsDraw)
+                                {
+                                    <th scope="col">@L["Records:Source"]</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in _rows)
+                            {
+                                <tr @key="row.Id">
+                                    <td class="text-nowrap">@row.RecordTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td class="text-break">@row.UserName</td>
+                                    <td class="text-break">@row.ShopName</td>
+                                    <td class="text-break">@(row.Address ?? "-")</td>
+                                    <td>@CategoryText(row.Category)</td>
+                                    <td>@row.AveragePrice.ToString("0.##")</td>
+                                    @if (IsDraw)
+                                    {
+                                        <td class="text-nowrap">@L[row.IsTemporary ? "Records:Temporary" : "Records:Stored"]</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+            <span>@L["Records:PageInfo", _page, _total]</span>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary" disabled="@(_loading || _error != null || _page <= 1)" @onclick="PreviousAsync">@L["Records:Previous"]</button>
+                <button type="button" class="btn btn-outline-secondary" disabled="@(_loading || _error != null || (long)_page * PageSize >= _total)" @onclick="NextAsync">@L["Records:Next"]</button>
+            </div>
+        </div>
+    </CardBody>
+</Card>
+
+@code {
+    /// <summary>是否展示抽取记录；为 false 时展示门店新增记录。</summary>
+    [Parameter]
+    public bool IsDraw { get; set; }
+
+    /// <summary>服务端分页的固定每页数量。</summary>
+    private const int PageSize = 20;
+
+    /// <summary>两种只读记录共用的展示快照，不承担服务端查询或授权职责。</summary>
+    private sealed record RecordRow(
+        Guid Id,
+        DateTime RecordTime,
+        string UserName,
+        string ShopName,
+        string? Address,
+        ShopCategory Category,
+        decimal AveragePrice,
+        bool IsTemporary);
+
+    /// <summary>当前成功查询页的展示行；加载和失败时清空以避免旧数据混淆。</summary>
+    private IReadOnlyList<RecordRow> _rows = Array.Empty<RecordRow>();
+
+    /// <summary>最近一次提交的筛选快照，翻页时不应用尚未搜索的表单变更。</summary>
+    private RecordSearchInput _search = new();
+
+    /// <summary>关键字输入，匹配名称、操作者或地址。</summary>
+    private string? _keyword;
+
+    /// <summary>日期下界输入，提交时取当日零时。</summary>
+    private DateTime? _fromDate;
+
+    /// <summary>日期上界输入，提交时包含该日期的完整一天。</summary>
+    private DateTime? _toDate;
+
+    /// <summary>表单是否请求当前租户内全部用户的记录，默认仅本人。</summary>
+    private bool _includeAll;
+
+    /// <summary>是否具有当前记录类型的全部用户查看权限。</summary>
+    private bool _canViewAll;
+
+    /// <summary>授权初始化或记录请求期间禁用筛选和分页操作。</summary>
+    private bool _loading = true;
+
+    /// <summary>授权初始化或记录请求失败时展示的本地化错误。</summary>
+    private string? _error;
+
+    /// <summary>当前成功加载的页码，首次加载及失败后从第一页开始。</summary>
+    private int _page = 1;
+
+    /// <summary>服务端返回的筛选结果总条数。</summary>
+    private long _total;
+
+    /// <summary>仅检查查看全部权限，不要求店铺权限，并默认加载本人记录的第一页。</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await base.OnInitializedAsync();
+            _canViewAll = await AuthorizationService.IsGrantedAsync(IsDraw
+                ? LunchFatePermissions.Records.DrawsViewAll
+                : LunchFatePermissions.Records.ShopCreationsViewAll);
+            await LoadAsync(1);
+        }
+        catch (Exception ex)
+        {
+            _rows = Array.Empty<RecordRow>();
+            _total = 0;
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>按已提交筛选条件请求指定页，使用服务端追加标识的时间降序稳定排序。</summary>
+    /// <param name="page">从一开始计数的目标页码。</param>
+    private async Task LoadAsync(int page)
+    {
+        _loading = true;
+        _error = null;
+        _rows = Array.Empty<RecordRow>();
+        _total = 0;
+        try
+        {
+            var input = new RecordSearchInput
+            {
+                Keyword = _search.Keyword,
+                FromTime = _search.FromTime,
+                ToTime = _search.ToTime,
+                IncludeAll = _canViewAll && _search.IncludeAll,
+                SkipCount = checked((page - 1) * PageSize),
+                MaxResultCount = PageSize,
+                Sorting = "RecordTime desc"
+            };
+            if (IsDraw)
+            {
+                var result = await RecordAppService.GetDrawListAsync(input);
+                _rows = result.Items.Select(row => new RecordRow(
+                    row.Id, row.RecordTime, row.UserName, row.ShopName, row.Address,
+                    row.Category, row.AveragePrice, row.IsTemporary)).ToList();
+                _total = result.TotalCount;
+            }
+            else
+            {
+                var result = await RecordAppService.GetShopCreationListAsync(input);
+                _rows = result.Items.Select(row => new RecordRow(
+                    row.Id, row.RecordTime, row.UserName, row.ShopName, row.Address,
+                    row.Category, row.AveragePrice, false)).ToList();
+                _total = result.TotalCount;
+            }
+
+            _page = page;
+        }
+        catch (Exception ex)
+        {
+            _rows = Array.Empty<RecordRow>();
+            _total = 0;
+            _page = 1;
+            _error = ToUserMessage(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>提交筛选快照并回到第一页；日期上界包含当日最后一个时间刻度。</summary>
+    private async Task SearchAsync()
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        _search = new RecordSearchInput
+        {
+            Keyword = _keyword?.Trim(),
+            FromTime = _fromDate?.Date,
+            ToTime = _toDate?.Date.AddTicks(TimeSpan.TicksPerDay - 1),
+            IncludeAll = _canViewAll && _includeAll
+        };
+        await LoadAsync(1);
+    }
+
+    /// <summary>重置所有筛选并恢复本人记录第一页。</summary>
+    private async Task ResetAsync()
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        _keyword = null;
+        _fromDate = null;
+        _toDate = null;
+        _includeAll = false;
+        await SearchAsync();
+    }
+
+    /// <summary>仅在非忙碌、无错误且存在上一页时请求上一页。</summary>
+    private async Task PreviousAsync()
+    {
+        if (!_loading && _error == null && _page > 1)
+        {
+            await LoadAsync(_page - 1);
+        }
+    }
+
+    /// <summary>仅在非忙碌、无错误且存在下一页时请求下一页。</summary>
+    private async Task NextAsync()
+    {
+        if (!_loading && _error == null && (long)_page * PageSize < _total)
+        {
+            await LoadAsync(_page + 1);
+        }
+    }
+
+    /// <summary>将记录快照的店铺分类转换为本地化显示文本。</summary>
+    /// <param name="category">记录时的店铺分类。</param>
+    /// <returns>本地化分类名称。</returns>
+    private string CategoryText(ShopCategory category) => L[$"Enum:ShopCategory.{(int)category}"].Value;
+}

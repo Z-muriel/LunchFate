@@ -13,6 +13,7 @@
         <Project Path="src/LunchFate.DbMigrator/LunchFate.DbMigrator.csproj" />
         <Project Path="src/LunchFate.Blazor/LunchFate.Blazor.csproj" />
         <Project Path="src/LunchFate.Blazor.Client/LunchFate.Blazor.Client.csproj" />
+        <Project Path="src/LunchFate.Integration/LunchFate.Integration.csproj" />
     </Folder>
     <Folder Name="/test/">
         <Project Path="test/LunchFate.Application.Tests/LunchFate.Application.Tests.csproj" />
