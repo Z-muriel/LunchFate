@@ -216,7 +216,15 @@ public class ShopAppService : ApplicationService, IShopAppService
                 var shop = new Shop();
                 Apply(input, shop);
                 shop.Name = name;
-                await GeocodeShopAsync(shop, input.Address, CancellationToken.None);
+
+                // 3. 地理编码：客户端未提供坐标时按地址解析（FR-M-01），失败不阻断保存。
+                //    与 CreateAsync 保持同一守卫——批量路径曾漏掉此判断，
+                //    GeocodeShopAsync 会先清空 POI 坐标再按地址解析，
+                //    高德个人 Key QPS≈3 时批量连发被限流返回 null，导致坐标永久丢失、转盘抽中无法导航。
+                if (!HasExplicitCoordinates(input))
+                {
+                    await GeocodeShopAsync(shop, input.Address, CancellationToken.None);
+                }
                 await _repository.InsertAsync(shop, autoSave: true);
                 await PublishShopCreatedAsync(shop);
                 await unitOfWork.CompleteAsync();

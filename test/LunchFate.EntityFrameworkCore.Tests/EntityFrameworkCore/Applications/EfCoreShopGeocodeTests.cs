@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using LunchFate.Integration.Gaode;
@@ -117,6 +119,30 @@ public class EfCoreShopGeocodeTests : LunchFateApplicationTestBase<LunchFateShop
         Gaode.GeocodeRequests.ShouldBe(new[] { FirstAddress });
         created.Longitude.ShouldBe(100d + FirstAddress.Length);
         created.Latitude.ShouldBe(20d + FirstAddress.Length);
+    }
+
+    /// <summary>
+    /// 回归：批量新增带显式 POI 坐标时不得再做地理编码。
+    /// 原实现批量路径无守卫，GeocodeShopAsync 先清空坐标再按地址解析，
+    /// 高德个人 Key QPS 限流返回 null 时坐标永久丢失，导致转盘抽中无法导航。
+    /// </summary>
+    [Fact]
+    public async Task Should_Keep_Explicit_Coordinates_Without_Geocoding_On_Batch_Create()
+    {
+        using var principal = Login();
+
+        var input = NewShop("批量显式坐标", FirstAddress);
+        input.Longitude = 113.293333;
+        input.Latitude = 23.092112;
+
+        var result = await Shops.BatchCreateAsync(new List<CreateUpdateShopDto> { input });
+
+        result.CreatedCount.ShouldBe(1);
+        result.Errors.ShouldBeEmpty();
+        Gaode.GeocodeRequests.ShouldBeEmpty();
+        var created = (await Shops.GetListAsync(new ShopSearchInput { Keyword = "批量显式坐标" })).Items.Single();
+        created.Longitude.ShouldBe(113.293333);
+        created.Latitude.ShouldBe(23.092112);
     }
 
     /// <summary>建立可释放的已认证身份，满足服务端的显式登录守卫。</summary>
