@@ -29,8 +29,11 @@ public interface IGaodeMapService
     /// 这里用 v3 而不是 v5 的 /v5/place/around：v5 的 count 字段返回的是"本页条数"，
     /// 算不出总页数（实测周边搜索每页都返回 page_size，导致前端"下一页"永远不可点）；
     /// v3 的 count 是真实匹配总数，且响应直接带 distance。
+    /// 注意高德文档：只传 keywords 时 sortrule=distance 不生效（按综合权重排序），
+    /// 因此"跨页全局按距离升序"这一结论仅在不传 keywords 时成立。
     /// </remarks>
-    /// <param name="keywords">搜索关键字，可为空（为空时返回半径内全部 POI）</param>
+    /// <param name="keywords">搜索关键字，可为空（为空时只按 <paramref name="types"/> 召回）</param>
+    /// <param name="types">POI 类型编码，多个用"|"分隔（如 050000 餐饮服务）；可为空，为空且关键字也为空时由高德回退为餐饮/生活服务/商务住宅三类</param>
     /// <param name="longitude">搜索中心经度（GCJ-02）</param>
     /// <param name="latitude">搜索中心纬度（GCJ-02）</param>
     /// <param name="radius">搜索半径（米）</param>
@@ -40,6 +43,7 @@ public interface IGaodeMapService
     /// <returns>单页结果与匹配总数；失败返回空页</returns>
     Task<PoiSearchPage> SearchAroundAsync(
         string keywords,
+        string types,
         double longitude,
         double latitude,
         int radius,

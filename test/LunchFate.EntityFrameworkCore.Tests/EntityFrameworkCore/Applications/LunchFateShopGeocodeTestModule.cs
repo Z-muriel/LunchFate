@@ -34,9 +34,16 @@ public class LunchFateShopGeocodeTestModule : AbpModule
 public class RecordingGaodeMapService : IGaodeMapService, ISingletonDependency
 {
     private readonly ConcurrentQueue<string> _geocodeRequests = new();
+    private readonly ConcurrentQueue<SearchAroundRequest> _searchRequests = new();
 
     /// <summary>按调用顺序记录的地理编码地址。</summary>
     public IReadOnlyCollection<string> GeocodeRequests => _geocodeRequests.ToArray();
+
+    /// <summary>按调用顺序记录的周边搜索入参。</summary>
+    public IReadOnlyCollection<SearchAroundRequest> SearchRequests => _searchRequests.ToArray();
+
+    /// <summary>周边搜索入参快照（只保留断言需要的字段）。</summary>
+    public sealed record SearchAroundRequest(string Keywords, string Types, int PageNum);
 
     /// <inheritdoc />
     public Task<GeocodeResult?> GeocodeAsync(
@@ -57,6 +64,7 @@ public class RecordingGaodeMapService : IGaodeMapService, ISingletonDependency
     /// <inheritdoc />
     public Task<PoiSearchPage> SearchAroundAsync(
         string keywords,
+        string types,
         double longitude,
         double latitude,
         int radius,
@@ -64,6 +72,7 @@ public class RecordingGaodeMapService : IGaodeMapService, ISingletonDependency
         int pageSize = IGaodeMapService.MaxPageSize,
         CancellationToken cancellationToken = default)
     {
+        _searchRequests.Enqueue(new SearchAroundRequest(keywords, types, pageNum));
         return Task.FromResult(new PoiSearchPage());
     }
 

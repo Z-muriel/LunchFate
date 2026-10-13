@@ -74,6 +74,7 @@ public class MapAppService : LunchFateAppService, IMapAppService
         //    高德按距离升序返回且跨页连续，distance 直接来自响应，无需前端重算。
         var page = await _gaodeMapService.SearchAroundAsync(
             input.Keywords,
+            input.Types,
             input.Longitude,
             input.Latitude,
             input.Radius,

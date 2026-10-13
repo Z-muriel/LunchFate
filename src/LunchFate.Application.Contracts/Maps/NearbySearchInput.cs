@@ -10,10 +10,16 @@ namespace LunchFate.Maps;
 /// </summary>
 public class NearbySearchInput : PagedResultRequestDto
 {
-    /// <summary>搜索关键字。</summary>
-    [Required]
+    /// <summary>搜索关键字。可为空：为空时只按 <see cref="Types"/> 召回附近同类店铺。</summary>
     [StringLength(80)]
     public string Keywords { get; set; } = string.Empty;
+
+    /// <summary>
+    /// POI 类型编码，多个用"|"分隔（如 050000 餐饮服务）。可为空；
+    /// 只做长度约束，具体取值交给高德（非法值只会查不到结果，不会有注入风险，参数经 URL 转义）。
+    /// </summary>
+    [StringLength(32)]
+    public string Types { get; set; } = string.Empty;
 
     /// <summary>当前位置经度（GCJ-02）。</summary>
     [Range(-180, 180)]

@@ -13,11 +13,21 @@
     </CardHeader>
     <CardBody>
         <div class="row g-2 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <label class="form-label">@L["Map:Keywords"]</label>
                 <input class="form-control" @bind="_keywords" @bind:event="oninput" placeholder="@L["Map:KeywordsPlaceholder"]" />
             </div>
             <div class="col-md-3">
+                <label class="form-label">@L["Map:Types"]</label>
+                @* 默认餐饮服务：不填关键字时按类型召回附近同类店铺，避免字面关键字只命中名字里带"餐厅"的店 *@
+                <select class="form-select" @bind="_types">
+                    <option value="050000">@L["Map:TypeFood"]</option>
+                    <option value="070000">@L["Map:TypeLife"]</option>
+                    <option value="120000">@L["Map:TypeHome"]</option>
+                    <option value="">@L["Map:TypeAny"]</option>
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label class="form-label">@L["Map:Radius"]</label>
                 <select class="form-select" @bind="_radius">
                     <option value="1000">1 km</option>
@@ -26,7 +36,7 @@
                     <option value="10000">10 km</option>
                 </select>
             </div>
-            <div class="col-md-4 d-flex flex-wrap gap-2">
+            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
                 <button type="button" class="btn btn-primary" disabled="@_loading" @onclick="SearchAsync">
                     @(_loading ? L["Map:Searching"] : L["Map:SearchNearby"])
                 </button>
@@ -176,7 +186,11 @@
     /// <summary>高德前端模块路径，相对应用根路径。</summary>
     private const string AmapModulePath = "./global-scripts.js";
 
-    private string _keywords = "餐厅";
+    /// <summary>关键字默认留空：按类型召回，用户主动输入时才叠加关键字过滤。</summary>
+    private string _keywords = string.Empty;
+
+    /// <summary>POI 类型编码，默认 050000（餐饮服务）。</summary>
+    private string _types = "050000";
     private int _radius = 3000;
     private double _longitude = FallbackLongitude;
     private double _latitude = FallbackLatitude;
@@ -347,16 +361,10 @@
         }
     }
 
-    /// <summary>提交搜索：校验关键字后从第一页开始查询。</summary>
+    /// <summary>提交搜索：从第一页开始查询。关键字可为空，此时只按类型召回。</summary>
     private async Task SearchAsync()
     {
         _error = null;
-
-        if (string.IsNullOrWhiteSpace(_keywords))
-        {
-            _error = L["Map:KeywordsRequired"].Value;
-            return;
-        }
 
         // 搜索条件变化后旧结果全部失效，清空跨页勾选避免误把上一批结果加入转盘/店铺库。
         ClearSelection();
@@ -376,6 +384,7 @@
             var result = await MapAppService.SearchNearbyAsync(new NearbySearchInput
             {
                 Keywords = _keywords.Trim(),
+                Types = _types,
                 Longitude = _longitude,
                 Latitude = _latitude,
                 Radius = _radius,

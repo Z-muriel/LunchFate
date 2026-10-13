@@ -98,6 +98,7 @@ public class GaodeMapService : IGaodeMapService
     /// <inheritdoc />
     public async Task<PoiSearchPage> SearchAroundAsync(
         string keywords,
+        string types,
         double longitude,
         double latitude,
         int radius,
@@ -135,6 +136,13 @@ public class GaodeMapService : IGaodeMapService
                 url += $"&keywords={Uri.EscapeDataString(keywords)}";
             }
 
+            // 类型召回：优先按类型筛选（如 050000 餐饮服务）；
+            // 两者都为空时高德自己回退为餐饮/生活服务/商务住宅三类，这里不重复拼参数。
+            if (!string.IsNullOrWhiteSpace(types))
+            {
+                url += $"&types={Uri.EscapeDataString(types)}";
+            }
+
             // 2. 发送请求并解析响应
             var response = await _httpClient.GetFromJsonAsync<GaodeAroundResponse>(url, JsonOptions, cancellationToken);
             if (response?.Pois is null)
@@ -161,7 +169,7 @@ public class GaodeMapService : IGaodeMapService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "周边搜索失败：{Keywords}", keywords);
+            _logger.LogWarning(ex, "周边搜索失败：{Keywords} / {Types}", keywords, types);
             return new PoiSearchPage { Failed = true };
         }
     }
