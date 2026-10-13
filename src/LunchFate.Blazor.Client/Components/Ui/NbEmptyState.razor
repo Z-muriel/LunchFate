@@ -1,0 +1,50 @@
+@inherits LunchFateComponentBase
+
+@* 空状态（.nb-empty）：图标 + 标题 + 说明 + 操作按钮。
+   首页转盘空状态（FR-W-06）与各列表空状态复用同一组件，保证观感一致。 *@
+
+<div class="@CssClass">
+    @if (!string.IsNullOrWhiteSpace(Icon))
+    {
+        <div class="nb-empty__icon" aria-hidden="true">
+            <i class="@Icon"></i>
+        </div>
+    }
+
+    <h4 class="nb-empty__title">@Title</h4>
+
+    @if (!string.IsNullOrWhiteSpace(Text))
+    {
+        <p class="nb-empty__text">@Text</p>
+    }
+
+    @if (Actions is not null)
+    {
+        <div class="nb-empty__actions">@Actions</div>
+    }
+</div>
+
+@code {
+    /// <summary>空状态标题。</summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    /// <summary>补充说明文案，可为空。</summary>
+    [Parameter]
+    public string? Text { get; set; }
+
+    /// <summary>FontAwesome 图标类名，如 fas fa-utensils；非 fa 开头时不渲染图标。</summary>
+    [Parameter]
+    public string? Icon { get; set; }
+
+    /// <summary>操作区（引导按钮等）。</summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    /// <summary>附加 CSS 类。</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>拼装最终类名。</summary>
+    private string CssClass => NbCss.Join("nb-empty", Class);
+}

@@ -4,19 +4,22 @@
 @attribute [Authorize(IdentityPermissions.Users.ManagePermissions)]
 @inherits LunchFateComponentBase
 
-@* 复用 ABP 标准用户授权页面，避免自建接口绕过框架的用户与租户校验。 *@
-<Card>
-    <CardHeader><CardTitle>@L["Menu:Permissions"]</CardTitle></CardHeader>
-    <CardBody>
-        <p>@L["Permissions:Description"]</p>
-        <ol>
-            <li>@L["Permissions:StepUser"]</li>
-            <li>@L["Permissions:StepGrant"]</li>
-            <li>@L["Permissions:StepShop"]</li>
-        </ol>
-        <div class="alert alert-info">@L["Permissions:ScopeHint"]</div>
-        <a class="btn btn-outline-primary" href="/identity/users">@L["Permissions:ManageUsers"]</a>
-    </CardBody>
-</Card>
+@* 权限管理（需求文档 FR-A-02）
+   复用 ABP 标准用户授权页面，避免自建接口绕过框架的用户与租户校验；
+   内嵌的 UserManagement 组件由 styles/overrides/blazorise.css 统一外观。 *@
+
+<NbCard Title="@L["Menu:Permissions"]">
+    <p>@L["Permissions:Description"]</p>
+
+    <ol class="nb-permissions__steps">
+        <li>@L["Permissions:StepUser"]</li>
+        <li>@L["Permissions:StepGrant"]</li>
+        <li>@L["Permissions:StepShop"]</li>
+    </ol>
+
+    <NbAlert Color="NbColor.Info">@L["Permissions:ScopeHint"]</NbAlert>
+
+    <a class="nb-btn nb-btn--primary" href="/identity/users">@L["Permissions:ManageUsers"]</a>
+</NbCard>
 
 <Volo.Abp.Identity.Blazor.Pages.Identity.UserManagement />

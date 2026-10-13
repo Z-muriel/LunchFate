@@ -1,0 +1,324 @@
+/* ============================================================================
+   页面层：页面专属样式（转盘页 / 店铺页 / 记录页 / 权限页）
+   只放"仅某一个页面使用"的规则；可复用的一律进 components.css。
+   ============================================================================ */
+
+/* ============================================================================
+   首页 · 午餐大转盘（需求文档 FR-W-01 ~ FR-W-07、FR-W-12、FR-W-13）
+   注意：转盘的几何尺寸、角度与动画时长由组件内联样式驱动，
+   本文件只负责外观（颜色、边框、阴影、字体），不得改动尺寸计算。
+   ============================================================================ */
+
+.nb-wheel-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* 页面标题区占满整行并左对齐，避免被容器的居中影响 */
+.nb-wheel-page > .nb-page-header {
+    width: 100%;
+    text-align: left;
+}
+
+/* 转盘页内的纵向节奏 */
+.nb-wheel-page > * + * {
+    margin-top: var(--nb-space-5);
+}
+
+.nb-wheel-stage {
+    position: relative;
+    width: var(--nb-wheel-size);
+    height: var(--nb-wheel-size);
+    margin-top: var(--nb-space-5);
+}
+
+/* 转盘本体：外圈黑描边 + 硬阴影；background 由组件内联 conic-gradient 提供。
+   overflow: hidden 作为兜底 —— 配合 border-radius 把子元素裁到圆内，
+   保证扇区标签在任何字号 / 门店数量下都不会跑出转盘。 */
+.nb-wheel {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: var(--nb-radius-circle);
+    border: var(--nb-wheel-ring) solid var(--nb-ink);
+    box-shadow: var(--nb-shadow-xl);
+    will-change: transform;
+}
+
+.nb-wheel__sector {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* 扇区标签：旋转 90° 后沿半径方向排列。
+   几何约束（单位：转盘宽度）—— 轴心半径 17%、轮缘留白 3%，可用径向长度上限约 30%：
+     top: 15% 与 max-width: 28% 使标签外端距轮缘 ≥ 3%（不压外圈描边）、
+     内端距圆心 ≈ 30%（不压中心按钮）。
+   所有取值均为百分比，因此各尺寸下表现一致。 */
+.nb-wheel__label {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    max-width: 28%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transform: translateX(-50%) rotate(90deg);
+    transform-origin: center;
+    color: var(--nb-ink);
+    font-size: clamp(10px, 2.6vw, 12px);
+    font-weight: var(--nb-weight-black);
+    line-height: 1.2;
+}
+
+/* 指针：纯黑三角 + 零模糊硬投影 */
+.nb-wheel__pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    z-index: 3;
+    width: 0;
+    height: 0;
+    transform: translateX(-50%);
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 26px solid var(--nb-ink);
+    filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, .35));
+}
+
+.nb-wheel__hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--nb-wheel-hub);
+    height: var(--nb-wheel-hub);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius-circle);
+    box-shadow: var(--nb-shadow);
+    transform: translate(-50%, -50%);
+}
+
+.nb-wheel__start {
+    width: 84%;
+    height: 84%;
+    background-color: var(--nb-primary);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius-circle);
+    color: var(--nb-ink);
+    font-family: var(--nb-font-sans);
+    font-size: clamp(14px, 3.6vw, 20px);
+    font-weight: var(--nb-weight-black);
+    cursor: pointer;
+    transition: transform var(--nb-dur-fast) var(--nb-ease),
+                box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.nb-wheel__start:hover:not(:disabled) {
+    background-color: var(--nb-primary-hover);
+    transform: scale(1.05);
+    box-shadow: var(--nb-shadow-lg);
+}
+
+.nb-wheel__start:active:not(:disabled) {
+    transform: scale(.97);
+    box-shadow: none;
+}
+
+.nb-wheel__start:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* 附近候选状态行 */
+.nb-wheel__nearby {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nb-space-2);
+    margin-top: var(--nb-space-4);
+}
+
+/* 候选清单折叠块 */
+.nb-wheel__list {
+    width: 100%;
+    max-width: 520px;
+    margin-top: var(--nb-space-4);
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-sm);
+    text-align: left;
+}
+
+.nb-wheel__list > summary {
+    cursor: pointer;
+    font-weight: var(--nb-weight-bold);
+}
+
+.nb-wheel__list ol {
+    margin: var(--nb-space-2) 0 0;
+    padding-left: var(--nb-space-5);
+    font-size: var(--nb-fs-sm);
+}
+
+/* 抽取结果卡片（FR-W-03 / FR-M-03）：有坐标时整卡可点击唤起高德导航 */
+.nb-result-card {
+    display: block;
+    padding: var(--nb-space-4) var(--nb-space-5);
+    background-color: var(--nb-surface-alt);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow);
+    color: var(--nb-ink);
+    text-align: center;
+    transition: transform var(--nb-dur-fast) var(--nb-ease),
+                box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.nb-result-card--link {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.nb-result-card--link:hover,
+.nb-result-card--link:focus-visible {
+    background-color: var(--nb-primary);
+    transform: var(--nb-lift);
+    box-shadow: var(--nb-shadow-lg);
+    color: var(--nb-ink);
+    text-decoration: none;
+}
+
+.nb-result-card__name {
+    font-size: var(--nb-fs-4xl);
+    font-weight: var(--nb-weight-black);
+    line-height: var(--nb-lh-tight);
+    letter-spacing: var(--nb-tracking-tight);
+    word-break: break-word;
+}
+
+.nb-result-card__saved {
+    margin: var(--nb-space-2) 0 var(--nb-space-4);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+}
+
+.nb-result-card__action {
+    display: inline-block;
+    margin-top: var(--nb-space-3);
+    font-weight: var(--nb-weight-bold);
+}
+
+.nb-result-card__hint {
+    display: block;
+    margin-top: var(--nb-space-3);
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-sm);
+}
+
+/* ============================================================================
+   天气小组件（FR-M-05）
+   ============================================================================ */
+
+.nb-weather {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    padding: var(--nb-space-2) var(--nb-space-3);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-pill);
+    box-shadow: var(--nb-shadow-xs);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    white-space: nowrap;
+}
+
+.nb-weather--rain {
+    background-color: var(--nb-info);
+}
+
+/* ============================================================================
+   店铺管理页（FR-S-01 ~ FR-S-06）
+   筛选栅格与操作组使用 components.css 的 .nb-filter-grid / .nb-filter-actions。
+   ============================================================================ */
+
+/* 批量操作条 */
+.nb-shops__batch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nb-space-3);
+}
+
+/* ============================================================================
+   记录页（FR-R-04）
+   筛选栅格使用 components.css 的 .nb-filter-grid。
+   ============================================================================ */
+
+/* ============================================================================
+   地图容器（FR-M-06）
+   注意：容器必须常驻渲染树，且只能改外观属性（border / radius / overflow），
+   不得改 display / position —— 高德会往容器内注入自己的 DOM。
+   ============================================================================ */
+
+.nb-map {
+    width: 100%;
+    height: 300px;
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    overflow: hidden;
+}
+
+.nb-map__fallback {
+    padding: var(--nb-space-3);
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-sm);
+}
+
+.nb-map__error {
+    padding: var(--nb-space-3);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+}
+
+/* ============================================================================
+   权限页（FR-A-02）
+   ============================================================================ */
+
+.nb-permissions__steps {
+    margin: 0;
+    padding-left: var(--nb-space-5);
+}
+
+.nb-permissions__steps li + li {
+    margin-top: var(--nb-space-1);
+}
+
+/* ============================================================================
+   响应式微调
+   ============================================================================ */
+
+@media (max-width: 576px) {
+    .nb-wheel-stage {
+        margin-top: var(--nb-space-4);
+    }
+
+    .nb-result-card__name {
+        font-size: var(--nb-fs-2xl);
+    }
+}

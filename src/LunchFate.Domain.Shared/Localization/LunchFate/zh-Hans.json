@@ -55,6 +55,12 @@
     "Reset": "重置",
     "Name": "名称",
 
+    "Close": "关闭",
+    "Loading": "加载中…",
+    "Breadcrumb": "面包屑导航",
+    "Menu:Main": "主菜单",
+    "Menu:ToggleNav": "展开或收起菜单",
+
     "Shops": "店铺列表",
     "NewShop": "新增店铺",
     "ShopDeletionConfirmationMessage": "确定要删除店铺『{0}』吗？",

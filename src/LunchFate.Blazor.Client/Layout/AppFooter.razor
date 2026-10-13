@@ -1,0 +1,9 @@
+@using System
+@using Volo.Abp.Ui.Branding
+@inject IBrandingProvider BrandingProvider
+
+@* 页脚（docs/前端重构方案-Neubrutalism.md §5.1）：应用名 + 年份，无额外链接。 *@
+
+<footer class="nb-footer">
+    <span>&copy; @DateTime.Now.Year @BrandingProvider.AppName</span>
+</footer>

@@ -1,0 +1,70 @@
+@using Microsoft.Extensions.Localization
+@using LunchFate.Localization
+@using Volo.Abp.Ui.LayoutHooks
+@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Components
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Components.LayoutHooks
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@inherits LayoutComponentBase
+@inject IStringLocalizer<LunchFateResource> Localizer
+
+@* 应用外壳（docs/前端重构方案-Neubrutalism.md §5.1）
+   结构：顶栏 + 侧边栏 + 内容区 + 页脚。
+
+   功能能力全部保留（替换 ABP BasicTheme MainLayout 的验收基线）：
+   - TopBar 内复用 ABP NavToolbar → 当前用户、我的账号、登出、语言切换
+   - PageAlert / UiMessageAlert / UiNotificationAlert → 框架消息提示
+   - UiPageProgress → 页面级进度条
+   - LayoutHook（Body.First / Body.Last）→ 框架与模块的布局扩展点
+   - DynamicLayoutComponent → 动态布局占位
+   - 侧边栏菜单由 IMenuManager 驱动，权限过滤由 ABP 菜单系统完成
+
+   注意：布局必须继承 LayoutComponentBase（需要 Body 属性），
+   因此不能继承 LunchFateComponentBase，本地化需显式注入。 *@
+
+<div class="nb-shell @(SideNavOpen ? "nb-shell--nav-open" : null)">
+    <TopBar OnToggleNav="ToggleSideNav" />
+
+    <div class="nb-shell__body">
+        <SideNav Open="SideNavOpen" OnClose="CloseSideNav" />
+
+        @* 移动端抽屉遮罩：点击关闭；桌面端由 CSS 隐藏 *@
+        <button type="button"
+                class="nb-sidenav-overlay"
+                aria-label="@Localizer["Close"]"
+                @onclick="CloseSideNav"></button>
+
+        <main class="nb-main">
+            <Breadcrumbs />
+            <div class="nb-content">
+                <PageAlert />
+                <LayoutHook Name="@LayoutHooks.Body.First" Layout="@StandardLayouts.Application" />
+                @Body
+                <LayoutHook Name="@LayoutHooks.Body.Last" Layout="@StandardLayouts.Application" />
+            </div>
+        </main>
+    </div>
+
+    <AppFooter />
+</div>
+
+@* 以下组件必须挂在外壳之外，保持与 ABP 原布局一致的位置语义 *@
+<DynamicLayoutComponent />
+<UiMessageAlert />
+<UiNotificationAlert />
+<UiPageProgress />
+
+@code {
+    /// <summary>移动端侧边栏抽屉是否展开；桌面端该状态不产生视觉效果。</summary>
+    private bool SideNavOpen { get; set; }
+
+    /// <summary>
+    /// 切换侧边栏抽屉的展开状态（顶栏汉堡按钮回调）。
+    /// </summary>
+    private void ToggleSideNav() => SideNavOpen = !SideNavOpen;
+
+    /// <summary>
+    /// 关闭侧边栏抽屉（遮罩点击、菜单项点击、Esc 键回调）。
+    /// </summary>
+    private void CloseSideNav() => SideNavOpen = false;
+}

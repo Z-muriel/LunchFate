@@ -8,12 +8,13 @@
 @inherits LunchFateComponentBase
 
 @* 地图容器常驻渲染树：高德会往容器内部注入自己的 DOM，
-   容器本身不能被条件块包裹，否则重渲染时会连带清掉已渲染的地图。 *@
-<div id="@_mapId" class="shop-map" style="width:100%;height:300px;"></div>
+   容器本身不能被条件块包裹，否则重渲染时会连带清掉已渲染的地图。
+   样式只改外观（border / border-radius / overflow），不得改 display / position。 *@
+<div id="@_mapId" class="nb-map"></div>
 
 @if (!_mapReady)
 {
-    <div class="text-muted small p-2">
+    <div class="nb-map__fallback">
         @if (!string.IsNullOrEmpty(Address))
         {
             @Address
@@ -27,7 +28,7 @@
 
 @if (_mapFailed)
 {
-    <div class="text-warning small p-2">@L["Map:RenderFailed"]</div>
+    <div class="nb-map__error">@L["Map:RenderFailed"]</div>
 }
 
 @code {

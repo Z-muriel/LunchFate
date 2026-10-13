@@ -1,0 +1,964 @@
+/* ============================================================================
+   Blazorise / Bootstrap 5 覆盖层
+   ----------------------------------------------------------------------------
+   目的：把 Blazorise（DataGrid / Modal / Card / 表单 / 分页 / 折叠面板）与
+   Bootstrap 工具类统一到新粗野主义，使自研页面与 ABP 内置页（Identity 用户管理、
+   租户管理、设置管理）呈现同一套视觉语言。
+
+   覆盖策略（见 src/LunchFate.Blazor/AGENT.md §4.2）：
+   1. 只改外观属性（颜色 / 边框 / 圆角 / 阴影 / 字重 / 间距），
+      绝不改变 DOM 结构或尺寸计算，避免影响 DataGrid 列宽与滚动逻辑。
+   2. 关键规则用"双类选择器"（如 .btn.btn）把特异性提到 0-2-0，
+      保证无论 bundle 顺序如何都能压过框架的单类规则，从而避免 !important。
+   3. 变体色用 .btn.btn-primary 之类（0-2-0）并显式补 :hover（0-3-0）。
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   按钮
+   --------------------------------------------------------------------------- */
+
+.btn.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nb-space-2);
+    min-height: 44px;
+    padding: var(--nb-space-2) var(--nb-space-4);
+    border-width: var(--nb-border-w);
+    border-style: solid;
+    border-color: var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow);
+    font-family: var(--nb-font-sans);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    line-height: 1.2;
+    text-decoration: none;
+    transition: transform var(--nb-dur-fast) var(--nb-ease),
+                box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.btn.btn:hover:not(:disabled) {
+    transform: var(--nb-lift);
+    box-shadow: var(--nb-shadow-lg);
+    text-decoration: none;
+}
+
+.btn.btn:active:not(:disabled) {
+    transform: var(--nb-press);
+    box-shadow: none;
+}
+
+.btn.btn:disabled,
+.btn.btn.disabled {
+    opacity: .45;
+    box-shadow: var(--nb-shadow-sm);
+}
+
+.btn.btn-sm,
+.btn-group-sm > .btn.btn {
+    min-height: 34px;
+    padding: var(--nb-space-1) var(--nb-space-3);
+    font-size: var(--nb-fs-xs);
+    box-shadow: var(--nb-shadow-sm);
+}
+
+.btn.btn-sm:hover:not(:disabled) {
+    box-shadow: var(--nb-shadow);
+}
+
+.btn.btn-lg {
+    min-height: 52px;
+    padding: var(--nb-space-3) var(--nb-space-5);
+    font-size: var(--nb-fs-base);
+}
+
+/* 实心变体：黄为主操作，红为危险，绿为成功，橙为警示 */
+.btn.btn-primary,
+.btn.btn-primary:focus {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-primary:hover:not(:disabled) {
+    background-color: var(--nb-primary-hover);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-secondary {
+    background-color: var(--nb-surface);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-secondary:hover:not(:disabled) {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-danger {
+    background-color: var(--nb-danger);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-danger:hover:not(:disabled) {
+    background-color: var(--nb-danger);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-success {
+    background-color: var(--nb-success);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-success:hover:not(:disabled) {
+    background-color: var(--nb-success);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-warning {
+    background-color: var(--nb-warning);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-warning:hover:not(:disabled) {
+    background-color: var(--nb-warning);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-info {
+    background-color: var(--nb-info);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+/* 描边变体：统一白底黑边，用左色条区分语义（不靠彩色边框） */
+.btn.btn-outline-primary,
+.btn.btn-outline-secondary,
+.btn.btn-outline-success,
+.btn.btn-outline-danger,
+.btn.btn-outline-warning,
+.btn.btn-outline-info,
+.btn.btn-outline-light,
+.btn.btn-outline-dark {
+    background-color: var(--nb-surface);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-outline-primary:hover:not(:disabled),
+.btn.btn-outline-secondary:hover:not(:disabled),
+.btn.btn-outline-success:hover:not(:disabled),
+.btn.btn-outline-danger:hover:not(:disabled),
+.btn.btn-outline-warning:hover:not(:disabled),
+.btn.btn-outline-info:hover:not(:disabled),
+.btn.btn-outline-dark:hover:not(:disabled) {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.btn.btn-outline-success:hover:not(:disabled) { background-color: var(--nb-success); }
+.btn.btn-outline-danger:hover:not(:disabled)  { background-color: var(--nb-danger); }
+.btn.btn-outline-warning:hover:not(:disabled) { background-color: var(--nb-warning); }
+.btn.btn-outline-info:hover:not(:disabled)    { background-color: var(--nb-info); }
+
+/* 链接式按钮：下划线按钮，去掉硬阴影与描边 */
+.btn.btn-link {
+    min-height: 0;
+    padding: var(--nb-space-1) var(--nb-space-2);
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--nb-ink);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
+.btn.btn-link:hover:not(:disabled) {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-xs);
+    text-decoration: none;
+    transform: none;
+}
+
+/* 关闭按钮（弹窗右上角） */
+.btn-close {
+    box-sizing: content-box;
+    width: 1em;
+    height: 1em;
+    padding: .25em;
+    background: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-sm);
+    box-shadow: var(--nb-shadow-xs);
+    opacity: 1;
+    font-size: var(--nb-fs-lg);
+    line-height: 1;
+}
+
+.btn-close::before {
+    content: "\00d7";
+    display: block;
+    color: var(--nb-ink);
+    font-size: 1em;
+    font-weight: var(--nb-weight-black);
+    line-height: 1;
+    text-align: center;
+}
+
+.btn-close:hover {
+    background-color: var(--nb-danger);
+}
+
+/* 按钮组 */
+.btn-group > .btn.btn {
+    box-shadow: none;
+    border-right-width: 0;
+}
+
+.btn-group > .btn.btn:last-child {
+    border-right-width: var(--nb-border-w);
+}
+
+/* ---------------------------------------------------------------------------
+   卡片
+   --------------------------------------------------------------------------- */
+
+.card {
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow);
+}
+
+.card > .card-header {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-primary);
+    border-bottom: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: calc(var(--nb-radius) - 1px) calc(var(--nb-radius) - 1px) 0 0;
+}
+
+.card > .card-header .card-title,
+.card > .card-header h1,
+.card > .card-header h2,
+.card > .card-header h3,
+.card > .card-header h4,
+.card > .card-header h5 {
+    margin: 0;
+    font-family: var(--nb-font-display);
+    font-size: var(--nb-fs-lg);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: var(--nb-tracking-tight);
+    color: var(--nb-ink);
+}
+
+.card > .card-body {
+    padding: var(--nb-space-4);
+}
+
+.card > .card-footer {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface-alt);
+    border-top: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: 0 0 calc(var(--nb-radius) - 1px) calc(var(--nb-radius) - 1px);
+}
+
+/* 卡片头里的按钮不需要撑满高度 */
+.card-header .btn.btn {
+    min-height: 34px;
+    padding: var(--nb-space-1) var(--nb-space-3);
+    font-size: var(--nb-fs-xs);
+    box-shadow: var(--nb-shadow-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   表单
+   --------------------------------------------------------------------------- */
+
+.form-label,
+.form-check-label,
+label {
+    margin-bottom: var(--nb-space-1);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+}
+
+.form-control,
+.form-select {
+    min-height: 44px;
+    padding: var(--nb-space-2) var(--nb-space-3);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: none;
+    color: var(--nb-ink);
+    font-family: var(--nb-font-sans);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-body);
+    transition: box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.form-control::placeholder {
+    color: var(--nb-ink-mute);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    box-shadow: var(--nb-shadow);
+    color: var(--nb-ink);
+    outline: none;
+}
+
+.form-control:disabled,
+.form-select:disabled,
+.form-control[readonly] {
+    background-color: var(--nb-surface-alt);
+    opacity: .7;
+}
+
+.form-select {
+    padding-right: var(--nb-space-6);
+}
+
+.form-control-sm,
+.form-select-sm {
+    min-height: 34px;
+    padding: var(--nb-space-1) var(--nb-space-2);
+    font-size: var(--nb-fs-xs);
+}
+
+/* 复选框 / 单选框：方块 + 粗黑边，选中时黄底黑勾 */
+.form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-top: .15em;
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-sm);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+}
+
+.form-check-input:focus {
+    border-color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-xs);
+    outline: none;
+}
+
+.form-check-input[type="radio"] {
+    border-radius: var(--nb-radius-circle);
+}
+
+.form-switch .form-check-input {
+    width: 42px;
+    height: 22px;
+    border-radius: var(--nb-radius-pill);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    min-height: 32px;
+}
+
+.form-check .form-check-label {
+    margin-bottom: 0;
+    font-weight: var(--nb-weight-body);
+}
+
+.form-text {
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-xs);
+}
+
+/* 校验消息：左色条 + 黑字，不用红色文字以免与危险操作混淆 */
+.invalid-feedback,
+.validation-message,
+.field-validation-error {
+    display: block;
+    margin-top: var(--nb-space-1);
+    padding-left: var(--nb-space-2);
+    border-left: var(--nb-border-w-sm) solid var(--nb-danger);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-xs);
+    font-weight: var(--nb-weight-bold);
+}
+
+.input-validation-error,
+.form-control.input-validation-error {
+    border-color: var(--nb-ink);
+    background-color: var(--nb-surface-alt);
+    box-shadow: var(--nb-shadow-xs);
+}
+
+/* 输入组：合并边框，避免双线 */
+.input-group > .form-control,
+.input-group > .form-select,
+.input-group > .btn.btn {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.input-group > :first-child {
+    border-top-left-radius: var(--nb-radius);
+    border-bottom-left-radius: var(--nb-radius);
+}
+
+.input-group > :last-child {
+    border-top-right-radius: var(--nb-radius);
+    border-bottom-right-radius: var(--nb-radius);
+}
+
+/* ---------------------------------------------------------------------------
+   表格（含 Blazorise DataGrid）
+   --------------------------------------------------------------------------- */
+
+.table,
+.datagrid .table {
+    width: 100%;
+    margin-bottom: 0;
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    vertical-align: middle;
+}
+
+.table > thead,
+.datagrid .table > thead {
+    background-color: var(--nb-surface-alt);
+}
+
+.table > thead th,
+.datagrid .table > thead th {
+    padding: var(--nb-space-3) var(--nb-space-3);
+    background-color: var(--nb-surface-alt);
+    border-bottom: var(--nb-border-w) solid var(--nb-ink);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-xs);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.table > tbody td,
+.datagrid .table > tbody td {
+    padding: var(--nb-space-3) var(--nb-space-3);
+    border-bottom: var(--nb-border-w-sm) solid var(--nb-rule);
+    color: var(--nb-ink);
+    background-color: var(--nb-surface);
+}
+
+.table > tbody tr:last-child td,
+.datagrid .table > tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* 斑马纹：白 / 米白交替（替代 Bootstrap 的灰底） */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: var(--nb-surface-alt);
+    background-color: var(--nb-surface-alt);
+    color: var(--nb-ink);
+}
+
+.table-hover > tbody > tr:hover > * {
+    --bs-table-bg-state: var(--nb-primary);
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+}
+
+.table > thead th a,
+.table > thead th .datagrid-sort-icon {
+    color: var(--nb-ink);
+    text-decoration: none;
+}
+
+.table-responsive {
+    border: 0;
+}
+
+/* Blazorise DataGrid 外壳与分页区 */
+.datagrid {
+    border: 0;
+}
+
+.datagrid-header,
+.datagrid-filter {
+    padding: var(--nb-space-2) 0;
+}
+
+.datagrid-pager,
+.datagrid .datagrid-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nb-space-3);
+    padding-top: var(--nb-space-3);
+    border-top: 0;
+}
+
+.datagrid-pager .btn.btn,
+.datagrid .btn.btn {
+    box-shadow: var(--nb-shadow-sm);
+}
+
+.datagrid-empty {
+    padding: var(--nb-space-5);
+    background-color: var(--nb-surface-alt);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    color: var(--nb-ink-mute);
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   徽章
+   --------------------------------------------------------------------------- */
+
+.badge {
+    padding: 2px var(--nb-space-3);
+    background-color: var(--nb-surface-alt);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-pill);
+    box-shadow: var(--nb-shadow-xs);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-xs);
+    font-weight: var(--nb-weight-bold);
+    line-height: 1.6;
+}
+
+.badge.text-bg-success { background-color: var(--nb-success); color: var(--nb-ink); }
+.badge.text-bg-warning { background-color: var(--nb-warning); color: var(--nb-ink); }
+.badge.text-bg-danger  { background-color: var(--nb-danger); color: var(--nb-ink); }
+.badge.text-bg-info    { background-color: var(--nb-info); color: var(--nb-ink); }
+.badge.text-bg-primary { background-color: var(--nb-primary); color: var(--nb-ink); }
+.badge.text-bg-light,
+.badge.text-bg-secondary,
+.badge.text-bg-dark    { background-color: var(--nb-surface-alt); color: var(--nb-ink); }
+
+/* ---------------------------------------------------------------------------
+   提示条
+   --------------------------------------------------------------------------- */
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nb-space-3);
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface-alt);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-sm);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+}
+
+.alert::before {
+    content: "";
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: var(--nb-space-2);
+    background-color: var(--nb-ink);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+}
+
+.alert-danger::before  { background-color: var(--nb-danger); }
+.alert-warning::before { background-color: var(--nb-warning); }
+.alert-success::before { background-color: var(--nb-success); }
+.alert-info::before    { background-color: var(--nb-info); }
+
+.alert-link {
+    color: var(--nb-ink);
+    text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------------
+   弹窗
+   --------------------------------------------------------------------------- */
+
+.modal-content {
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-lg) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-xl);
+}
+
+.modal-header {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-primary);
+    border-bottom: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: 0;
+}
+
+.modal-title {
+    margin: 0;
+    font-family: var(--nb-font-display);
+    font-size: var(--nb-fs-lg);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: var(--nb-tracking-tight);
+    color: var(--nb-ink);
+}
+
+.modal-body {
+    padding: var(--nb-space-4);
+    color: var(--nb-ink);
+}
+
+.modal-footer {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface-alt);
+    border-top: var(--nb-border-w) solid var(--nb-ink);
+    gap: var(--nb-space-2);
+}
+
+.modal-backdrop {
+    background-color: #000;
+}
+
+/* 移动端：弹窗改为底部抽屉（需求文档 §3.1 交互细节） */
+@media (max-width: 767.98px) {
+    .modal-dialog {
+        margin: 0;
+        min-height: 100%;
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-top: var(--nb-border-w-lg) solid var(--nb-ink);
+        border-radius: var(--nb-radius) var(--nb-radius) 0 0;
+        box-shadow: 0 -6px 0 var(--nb-ink);
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .modal-footer > .btn.btn {
+        width: 100%;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   下拉菜单（含顶栏用户菜单）
+   --------------------------------------------------------------------------- */
+
+.dropdown-menu {
+    min-width: 210px;
+    padding: var(--nb-space-1);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-lg);
+}
+
+.dropdown-item {
+    padding: var(--nb-space-2) var(--nb-space-3);
+    border-radius: var(--nb-radius-sm);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-body);
+    text-decoration: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+    font-weight: var(--nb-weight-bold);
+}
+
+.dropdown-divider {
+    height: var(--nb-border-w-sm);
+    margin: var(--nb-space-1) 0;
+    background-color: var(--nb-ink);
+    opacity: .25;
+}
+
+/* 顶栏工具区的下拉触发器（ABP NavToolbar 产出） */
+.navbar-nav .nav-link,
+.navbar-nav .dropdown-toggle,
+.navbar-nav button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    min-height: 40px;
+    padding: var(--nb-space-1) var(--nb-space-3);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-pill);
+    box-shadow: var(--nb-shadow-xs);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--nb-dur-fast) var(--nb-ease),
+                box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .dropdown-toggle:hover,
+.navbar-nav button:hover {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+    transform: var(--nb-lift);
+    box-shadow: var(--nb-shadow-sm);
+    text-decoration: none;
+}
+
+.navbar-nav .nav-item {
+    list-style: none;
+}
+
+.navbar-nav {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* ---------------------------------------------------------------------------
+   列表组
+   --------------------------------------------------------------------------- */
+
+.list-group {
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    overflow: hidden;
+}
+
+.list-group-item {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface);
+    border-bottom: var(--nb-border-w-sm) solid var(--nb-rule);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+}
+
+.list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.list-group-item:hover {
+    background-color: var(--nb-surface-alt);
+}
+
+/* ---------------------------------------------------------------------------
+   分页
+   --------------------------------------------------------------------------- */
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nb-space-1);
+    margin: 0;
+}
+
+.page-link {
+    min-width: 40px;
+    min-height: 40px;
+    padding: var(--nb-space-1) var(--nb-space-2);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-sm);
+    box-shadow: var(--nb-shadow-xs);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-align: center;
+    text-decoration: none;
+}
+
+.page-link:hover {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-sm);
+}
+
+.page-item.disabled .page-link {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink-mute);
+    opacity: .7;
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------------
+   标签页 / 折叠面板（ABP 权限管理弹窗依赖折叠面板）
+   --------------------------------------------------------------------------- */
+
+.nav-tabs {
+    border-bottom: var(--nb-border-w) solid var(--nb-ink);
+    gap: var(--nb-space-1);
+}
+
+.nav-tabs .nav-link {
+    padding: var(--nb-space-2) var(--nb-space-4);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-bottom: 0;
+    border-radius: var(--nb-radius) var(--nb-radius) 0 0;
+    box-shadow: none;
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: none;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.tab-content {
+    padding-top: var(--nb-space-4);
+}
+
+.accordion {
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    overflow: hidden;
+}
+
+.accordion-item {
+    background-color: var(--nb-surface);
+    border: 0;
+    border-bottom: var(--nb-border-w-sm) solid var(--nb-rule);
+}
+
+.accordion-item:last-child {
+    border-bottom: 0;
+}
+
+.accordion-button {
+    padding: var(--nb-space-3) var(--nb-space-4);
+    background-color: var(--nb-surface-alt);
+    border: 0;
+    box-shadow: none;
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+    box-shadow: none;
+}
+
+.accordion-button:focus {
+    box-shadow: inset 0 0 0 var(--nb-border-w) var(--nb-ink);
+}
+
+.accordion-body {
+    padding: var(--nb-space-4);
+    background-color: var(--nb-surface);
+}
+
+/* ---------------------------------------------------------------------------
+   进度条 / 加载指示
+   --------------------------------------------------------------------------- */
+
+.progress {
+    height: 16px;
+    background-color: var(--nb-surface-alt);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-pill);
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-xs);
+    font-weight: var(--nb-weight-bold);
+}
+
+.spinner-border {
+    border-width: var(--nb-border-w);
+    color: var(--nb-ink);
+}
+
+/* ABP 页面级进度条与消息提示：贴到顶栏下方 */
+.abp-page-progress,
+.page-progress {
+    z-index: var(--nb-z-toast);
+}
+
+/* ---------------------------------------------------------------------------
+   工具类
+   --------------------------------------------------------------------------- */
+
+.text-muted {
+    color: var(--nb-ink-mute) !important;
+}
+
+.fw-bold,
+.fw-bolder {
+    font-weight: var(--nb-weight-bold) !important;
+}
+
+.container,
+.container-fluid {
+    max-width: var(--nb-content-max);
+}
+
+/* ---------------------------------------------------------------------------
+   布局容器（内容区内的栅格间距按令牌对齐）
+   --------------------------------------------------------------------------- */
+
+.row {
+    --bs-gutter-x: var(--nb-space-4);
+    --bs-gutter-y: var(--nb-space-4);
+}

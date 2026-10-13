@@ -1,0 +1,384 @@
+/* ============================================================================
+   布局层：应用外壳（顶栏 / 侧边栏 / 面包屑 / 内容区 / 页脚）
+   结构由 src/LunchFate.Blazor.Client/Layout/*.razor 产出。
+   ============================================================================ */
+
+.nb-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.nb-shell__body {
+    display: grid;
+    grid-template-columns: var(--nb-sidenav-w) minmax(0, 1fr);
+    flex: 1 1 auto;
+    align-items: stretch;
+}
+
+/* ---------------------------------------------------------------------------
+   顶栏
+   --------------------------------------------------------------------------- */
+
+.nb-topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--nb-z-topbar);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nb-space-4);
+    height: var(--nb-topbar-h);
+    padding: 0 var(--nb-page-pad);
+    background-color: var(--nb-surface);
+    border-bottom: var(--nb-border-w-lg) solid var(--nb-ink);
+    box-shadow: 0 4px 0 var(--nb-ink);
+}
+
+.nb-topbar__left,
+.nb-topbar__right {
+    display: flex;
+    align-items: center;
+    gap: var(--nb-space-3);
+    min-width: 0;
+}
+
+/* 右侧工具区不参与收缩，避免下拉展开时挤动布局 */
+.nb-topbar__right {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+}
+
+.nb-topbar__burger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background-color: var(--nb-primary);
+    border: var(--nb-border-w) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-sm);
+    cursor: pointer;
+    color: var(--nb-ink);
+    transition: transform var(--nb-dur-fast) var(--nb-ease), box-shadow var(--nb-dur-fast) var(--nb-ease);
+}
+
+.nb-topbar__burger:hover {
+    transform: var(--nb-lift);
+    box-shadow: var(--nb-shadow);
+}
+
+.nb-topbar__burger:active {
+    transform: var(--nb-press);
+    box-shadow: none;
+}
+
+.nb-topbar__burger-bars {
+    display: block;
+    width: 20px;
+    height: var(--nb-border-w);
+    background-color: var(--nb-ink);
+    box-shadow: 0 -6px 0 var(--nb-ink), 0 6px 0 var(--nb-ink);
+}
+
+/* 顶栏里的品牌标识。
+   ABP Branding 组件产出 .navbar-brand；同时兜底匹配左区内的首个链接，
+   避免 Branding 组件标记变化时品牌样式失效。 */
+.nb-topbar .navbar-brand,
+.nb-topbar__left > a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    margin: 0;
+    padding: 0;
+    font-family: var(--nb-font-display);
+    font-size: var(--nb-fs-xl);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: var(--nb-tracking-tight);
+    color: var(--nb-ink);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.nb-topbar .navbar-brand:hover,
+.nb-topbar__left > a:hover {
+    background-color: transparent;
+}
+
+/* 顶栏右侧的用户菜单容器（复用 ABP NavToolbar 产出的 .navbar-nav） */
+.nb-topbar__right > .navbar-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--nb-space-2);
+}
+
+/* ---------------------------------------------------------------------------
+   侧边栏
+   --------------------------------------------------------------------------- */
+
+.nb-sidenav {
+    position: sticky;
+    top: var(--nb-topbar-h);
+    display: flex;
+    flex-direction: column;
+    gap: var(--nb-space-5);
+    width: var(--nb-sidenav-w);
+    /* 固定为"顶栏与页脚之间"的视口高度：
+       短页面不会把页脚顶出屏幕，长页面靠 sticky 常驻在视口内，
+       因此侧栏在任何页面长度下看上去都是完整的一整条（不会被内容高度截断）。 */
+    height: calc(100vh - var(--nb-topbar-h) - var(--nb-footer-h));
+    max-height: calc(100vh - var(--nb-topbar-h) - var(--nb-footer-h));
+    padding: var(--nb-space-5) var(--nb-space-4);
+    overflow-y: auto;
+    background-color: var(--nb-surface);
+    border-right: var(--nb-border-w-lg) solid var(--nb-ink);
+}
+
+.nb-sidenav__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nb-space-2);
+}
+
+/* 单个菜单项容器：叶子项与分组项共用，保证纵向节奏一致 */
+.nb-sidenav__entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nb-space-1);
+}
+
+.nb-sidenav__title {
+    margin: 0 0 var(--nb-space-1);
+    padding-left: var(--nb-space-2);
+    font-size: var(--nb-fs-xs);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--nb-ink-mute);
+}
+
+.nb-sidenav__item {
+    display: flex;
+    align-items: center;
+    gap: var(--nb-space-3);
+    min-height: 44px;
+    padding: var(--nb-space-2) var(--nb-space-3);
+    background-color: transparent;
+    border: var(--nb-border-w) solid transparent;
+    border-radius: var(--nb-radius);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--nb-dur-fast) var(--nb-ease),
+                box-shadow var(--nb-dur-fast) var(--nb-ease),
+                background-color var(--nb-dur-fast) var(--nb-ease);
+}
+
+.nb-sidenav__item:hover {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    text-decoration: none;
+}
+
+/* 当前路由对应的菜单项：黄底 + 黑边 + 硬阴影（唯一"选中"表达） */
+.nb-sidenav__item--active {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-sm);
+}
+
+.nb-sidenav__item--active:hover {
+    background-color: var(--nb-primary-hover);
+}
+
+.nb-sidenav__item--disabled {
+    color: var(--nb-ink-mute);
+    cursor: not-allowed;
+}
+
+.nb-sidenav__icon {
+    flex: 0 0 auto;
+    width: 1.25em;
+    text-align: center;
+    font-size: var(--nb-fs-base);
+}
+
+.nb-sidenav__text {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nb-sidenav__caret {
+    flex: 0 0 auto;
+    font-size: var(--nb-fs-xs);
+    transition: transform var(--nb-dur-base) var(--nb-ease);
+}
+
+.nb-sidenav__item--open .nb-sidenav__caret {
+    transform: rotate(90deg);
+}
+
+/* 二级菜单：缩进 + 左侧黑边，视觉上从属于父项 */
+.nb-sidenav__children {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nb-space-1);
+    margin: var(--nb-space-1) 0 0 var(--nb-space-5);
+    padding-left: var(--nb-space-3);
+    border-left: var(--nb-border-w-sm) solid var(--nb-ink);
+}
+
+.nb-sidenav__children .nb-sidenav__item {
+    min-height: 38px;
+    font-weight: var(--nb-weight-body);
+}
+
+/* 移动端抽屉遮罩 */
+.nb-sidenav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: var(--nb-z-sidenav);
+    background-color: rgba(0, 0, 0, .55);
+    border: 0;
+    padding: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   内容区
+   --------------------------------------------------------------------------- */
+
+.nb-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--nb-space-5) var(--nb-page-pad) var(--nb-space-7);
+}
+
+.nb-content {
+    width: 100%;
+    max-width: var(--nb-content-max);
+    margin: 0 auto;
+}
+
+/* 内容区内的纵向节奏：区块之间统一间距 */
+.nb-content > * + * {
+    margin-top: var(--nb-space-5);
+}
+
+/* ---------------------------------------------------------------------------
+   面包屑
+   --------------------------------------------------------------------------- */
+
+.nb-breadcrumb {
+    width: 100%;
+    max-width: var(--nb-content-max);
+    margin: 0 auto var(--nb-space-4);
+}
+
+.nb-breadcrumb__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nb-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--nb-fs-sm);
+}
+
+.nb-breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    font-weight: var(--nb-weight-bold);
+}
+
+.nb-breadcrumb__sep {
+    color: var(--nb-ink-mute);
+    font-weight: var(--nb-weight-body);
+}
+
+.nb-breadcrumb__current {
+    color: var(--nb-ink-mute);
+    font-weight: var(--nb-weight-body);
+}
+
+.nb-breadcrumb__link {
+    text-decoration: none;
+}
+
+.nb-breadcrumb__link:hover {
+    background-color: var(--nb-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   页脚
+   --------------------------------------------------------------------------- */
+
+.nb-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--nb-footer-h);
+    padding: 0 var(--nb-page-pad);
+    background-color: var(--nb-surface);
+    border-top: var(--nb-border-w) solid var(--nb-ink);
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-xs);
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   响应式：< 992px 侧边栏变抽屉（Bootstrap 5 lg 断点，与 Blazorise 栅格一致）
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 991.98px) {
+    .nb-shell__body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nb-topbar__burger {
+        display: inline-flex;
+    }
+
+    .nb-sidenav {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: var(--nb-z-overlay);
+        width: min(84vw, 320px);
+        height: 100vh;
+        max-height: 100vh;
+        padding-top: var(--nb-space-6);
+        border-right: var(--nb-border-w-lg) solid var(--nb-ink);
+        box-shadow: var(--nb-shadow-xl);
+        transform: translateX(-100%);
+        transition: transform var(--nb-dur-slow) var(--nb-ease);
+    }
+
+    .nb-shell--nav-open .nb-sidenav {
+        transform: translateX(0);
+    }
+
+    .nb-shell--nav-open .nb-sidenav-overlay {
+        display: block;
+    }
+
+    .nb-main {
+        padding-top: var(--nb-space-4);
+    }
+}
+
+@media (min-width: 992px) {
+    .nb-sidenav-overlay {
+        display: none !important;
+    }
+}

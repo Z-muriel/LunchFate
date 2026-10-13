@@ -1,0 +1,150 @@
+@using System.Linq
+@using Microsoft.Extensions.Localization
+@using LunchFate.Localization
+@using Volo.Abp.UI.Navigation
+@implements IDisposable
+@inject IMenuManager MenuManager
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<LunchFateResource> Localizer
+
+@* 面包屑（docs/前端重构方案-Neubrutalism.md §5.1）
+   不复用 ABP 的 Breadcrumbs 组件（Bootstrap 标记），改为按"当前路由 → 菜单路径"自行推导，
+   以便完全掌控标记与样式；匹配不到时退化为仅显示首页。 *@
+
+@if (_trail.Count > 0)
+{
+    <nav class="nb-breadcrumb" aria-label="@Localizer["Breadcrumb"]">
+        <ol class="nb-breadcrumb__list">
+            @for (var i = 0; i < _trail.Count; i++)
+            {
+                var index = i;
+                var crumb = _trail[index];
+                var isLast = index == _trail.Count - 1;
+
+                <li class="nb-breadcrumb__item">
+                    @if (index > 0)
+                    {
+                        <span class="nb-breadcrumb__sep" aria-hidden="true">/</span>
+                    }
+
+                    @if (isLast)
+                    {
+                        <span class="nb-breadcrumb__current" aria-current="page">@crumb.Title</span>
+                    }
+                    else
+                    {
+                        <a class="nb-breadcrumb__link" href="@crumb.Href">@crumb.Title</a>
+                    }
+                </li>
+            }
+        </ol>
+    </nav>
+}
+
+@code {
+    /// <summary>面包屑的一段：显示文案与可点击地址。</summary>
+    private sealed record Crumb(string Title, string Href);
+
+    /// <summary>当前渲染的面包屑路径；为空时不渲染任何标记。</summary>
+    private List<Crumb> _trail = [];
+
+    /// <summary>主菜单数据；为 null 表示尚未加载完成。</summary>
+    private ApplicationMenu? _menu;
+
+    /// <summary>
+    /// 订阅路由变化并加载主菜单，随后构建面包屑。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        _menu = await MenuManager.GetAsync(StandardMenus.Main);
+        BuildTrail();
+    }
+
+    /// <summary>
+    /// 父组件重渲染时同步刷新面包屑，避免菜单数据到达后仍显示空路径。
+    /// </summary>
+    protected override void OnParametersSet() => BuildTrail();
+
+    /// <summary>
+    /// 路由变化时重建面包屑。
+    /// </summary>
+    /// <param name="sender">事件源</param>
+    /// <param name="args">路由变化参数</param>
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        BuildTrail();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// 按当前路由在菜单树中查找路径；查不到时退化为仅显示首页。
+    /// </summary>
+    private void BuildTrail()
+    {
+        var trail = new List<Crumb>();
+        if (_menu is null)
+        {
+            _trail = trail;
+            return;
+        }
+
+        var current = MenuLink.Normalize(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        var path = new List<ApplicationMenuItem>();
+        if (FindPath(_menu.Items, current, path))
+        {
+            trail.AddRange(path.Select(item => new Crumb(
+                item.DisplayName,
+                MenuLink.Resolve(item.Url, NavigationManager.BaseUri))));
+        }
+
+        // 菜单中不存在当前路由（如框架内置页被移出菜单）时，至少保留首页作为起点
+        if (trail.Count == 0)
+        {
+            var home = _menu.Items.FirstOrDefault(item => string.IsNullOrEmpty(MenuLink.Normalize(item.Url)));
+            if (home is not null)
+            {
+                trail.Add(new Crumb(home.DisplayName, MenuLink.Resolve(home.Url, NavigationManager.BaseUri)));
+            }
+        }
+
+        _trail = trail;
+    }
+
+    /// <summary>
+    /// 深度优先查找对应当前路由的叶子菜单项，并把从根到该叶子的路径写入 trail。
+    /// 分组项自身不参与匹配，避免"管理"这类容器被当成页面。
+    /// </summary>
+    /// <param name="items">待搜索的菜单项集合</param>
+    /// <param name="current">归一化后的当前路由</param>
+    /// <param name="trail">递归累积的路径</param>
+    /// <returns>找到匹配项时为 true</returns>
+    private static bool FindPath(IEnumerable<ApplicationMenuItem> items, string current, List<ApplicationMenuItem> trail)
+    {
+        foreach (var item in items)
+        {
+            trail.Add(item);
+
+            if (item.Items.Count == 0)
+            {
+                if (string.Equals(MenuLink.Normalize(item.Url), current, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+            else if (FindPath(item.Items, current, trail))
+            {
+                return true;
+            }
+
+            trail.RemoveAt(trail.Count - 1);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 取消路由事件订阅。
+    /// </summary>
+    public void Dispose() => NavigationManager.LocationChanged -= OnLocationChanged;
+}

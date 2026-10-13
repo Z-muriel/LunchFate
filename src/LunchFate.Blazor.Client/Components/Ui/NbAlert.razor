@@ -1,0 +1,28 @@
+@inherits LunchFateComponentBase
+
+@* 提示条（.nb-alert）：米白底 + 3px 黑边 + 硬阴影，语义靠左侧色条表达，
+   正文始终黑字以保证对比度。用于业务错误、操作结果与说明性提示。 *@
+
+<div class="@CssClass" role="alert">
+    <div class="nb-alert__body">@ChildContent</div>
+</div>
+
+@code {
+    /// <summary>语义色；错误用 Danger、成功用 Success、一般提示用 Info。</summary>
+    [Parameter]
+    public NbColor Color { get; set; } = NbColor.Info;
+
+    /// <summary>附加 CSS 类。</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>提示内容。</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>拼装最终类名：基础类 + 语义色 + 调用方附加类。</summary>
+    private string CssClass => NbCss.Join(
+        "nb-alert",
+        NbCss.Modifier("nb-alert", NbCss.ColorName(Color)),
+        Class);
+}

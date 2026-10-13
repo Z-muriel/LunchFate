@@ -1,0 +1,30 @@
+@inherits LunchFateComponentBase
+
+@* 加载指示器（.nb-spinner）：明黄方块 + 粗黑边 + 硬阴影，8 步旋转。
+   替代原 .loader 与 .wheel-spinner 两套不一致的实现。 *@
+
+<div class="@CssClass" role="status">
+    <div class="nb-spinner__box" aria-hidden="true"></div>
+
+    @if (!string.IsNullOrWhiteSpace(Text))
+    {
+        <p class="nb-spinner__text">@Text</p>
+    }
+    else
+    {
+        <span class="nb-visually-hidden">@L["Loading"]</span>
+    }
+</div>
+
+@code {
+    /// <summary>可选的加载文案；不传时只渲染图形并给出无障碍文本。</summary>
+    [Parameter]
+    public string? Text { get; set; }
+
+    /// <summary>附加 CSS 类。</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>拼装最终类名。</summary>
+    private string CssClass => NbCss.Join("nb-spinner", Class);
+}

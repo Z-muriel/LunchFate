@@ -1,0 +1,37 @@
+@using Microsoft.Extensions.Localization
+@using LunchFate.Localization
+@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Components
+@inject IStringLocalizer<LunchFateResource> Localizer
+
+@* 顶栏（docs/前端重构方案-Neubrutalism.md §5.1）
+   左侧：移动端汉堡按钮 + 品牌标识；右侧：复用 ABP NavToolbar，
+   以保留当前用户、我的账号、登出与语言切换等框架能力。 *@
+
+<header class="nb-topbar">
+    <div class="nb-topbar__left">
+        <button type="button"
+                class="nb-topbar__burger"
+                aria-label="@Localizer["Menu:ToggleNav"]"
+                @onclick="ToggleNavAsync">
+            <span class="nb-topbar__burger-bars"></span>
+        </button>
+        <Branding />
+    </div>
+
+    <div class="nb-topbar__right">
+        @* NavToolbar 由 ABP 工具栏贡献者驱动，渲染用户菜单与登出，不自行实现 *@
+        <NavToolbar />
+    </div>
+</header>
+
+@code {
+    /// <summary>点击汉堡按钮时通知外壳切换侧边栏抽屉。</summary>
+    [Parameter]
+    public EventCallback OnToggleNav { get; set; }
+
+    /// <summary>
+    /// 转发汉堡按钮点击到外壳的切换回调。
+    /// </summary>
+    private Task ToggleNavAsync() => OnToggleNav.InvokeAsync();
+}

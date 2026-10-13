@@ -6,106 +6,113 @@
 @inject IRecordAppService RecordAppService
 @inherits LunchFateComponentBase
 
-<Card>
-    <CardHeader>
-        <CardTitle>@L[IsDraw ? "Records:DrawsTitle" : "Records:ShopCreationsTitle"]</CardTitle>
-    </CardHeader>
-    <CardBody>
-        <form @onsubmit="SearchAsync" @onsubmit:preventDefault>
-            <fieldset disabled="@_loading" class="mb-3">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label" for="recordKeyword">@L["Records:Keyword"]</label>
-                        <input id="recordKeyword" type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label" for="recordFromDate">@L["Records:FromDate"]</label>
-                        <input id="recordFromDate" type="date" class="form-control" @bind="_fromDate" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label" for="recordToDate">@L["Records:ToDate"]</label>
-                        <input id="recordToDate" type="date" class="form-control" @bind="_toDate" />
-                    </div>
-                    <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">@L["Search"]</button>
-                        <button type="button" class="btn btn-outline-secondary" @onclick="ResetAsync">@L["Reset"]</button>
-                    </div>
+@* 抽取记录 / 门店添加记录（需求文档 FR-R-04）
+   两类记录共用本组件，通过 IsDraw 切换数据源与展示列。 *@
+
+<NbCard Title="@L[IsDraw ? "Records:DrawsTitle" : "Records:ShopCreationsTitle"]">
+    <form @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <fieldset disabled="@_loading">
+            <div class="nb-filter-grid">
+                <div>
+                    <label class="form-label" for="recordKeyword">@L["Records:Keyword"]</label>
+                    <input id="recordKeyword" type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
                 </div>
-                @if (_canViewAll)
-                {
-                    <div class="form-check mt-3">
-                        <input id="recordIncludeAll" type="checkbox" class="form-check-input" @bind="_includeAll" @bind:after="SearchAsync" />
-                        <label class="form-check-label" for="recordIncludeAll">@L["Records:IncludeAll"]</label>
-                    </div>
-                }
-            </fieldset>
-        </form>
+                <div>
+                    <label class="form-label" for="recordFromDate">@L["Records:FromDate"]</label>
+                    <input id="recordFromDate" type="date" class="form-control" @bind="_fromDate" />
+                </div>
+                <div>
+                    <label class="form-label" for="recordToDate">@L["Records:ToDate"]</label>
+                    <input id="recordToDate" type="date" class="form-control" @bind="_toDate" />
+                </div>
+                <div class="nb-filter-actions">
+                    <NbButton Type="submit" Color="NbColor.Primary">@L["Search"]</NbButton>
+                    <NbButton Clicked="ResetAsync">@L["Reset"]</NbButton>
+                </div>
+            </div>
 
-        <p class="text-muted">@L[_search.IncludeAll ? "Records:AllHint" : "Records:MineHint"]</p>
+            @if (_canViewAll)
+            {
+                <label class="form-check">
+                    <input id="recordIncludeAll" type="checkbox" class="form-check-input" @bind="_includeAll" @bind:after="SearchAsync" />
+                    <span class="form-check-label">@L["Records:IncludeAll"]</span>
+                </label>
+            }
+        </fieldset>
+    </form>
 
-        @if (_error != null)
+    <p class="nb-hint">@L[_search.IncludeAll ? "Records:AllHint" : "Records:MineHint"]</p>
+
+    @if (_error != null)
+    {
+        <NbAlert Color="NbColor.Danger">@_error</NbAlert>
+    }
+
+    <div aria-busy="@_loading">
+        @if (_loading)
         {
-            <div class="alert alert-danger" role="alert">@_error</div>
+            <NbSpinner Text="@L["Records:Loading"]" />
         }
-
-        <div aria-busy="@_loading">
-            @if (_loading)
-            {
-                <p class="text-muted" role="status">@L["Records:Loading"]</p>
-            }
-            else if (_error == null && _rows.Count == 0)
-            {
-                <p class="text-muted" role="status">@L["Records:Empty"]</p>
-            }
-            else if (_rows.Count > 0)
-            {
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th scope="col">@L["Records:Time"]</th>
-                                <th scope="col">@L["Records:User"]</th>
-                                <th scope="col">@L["Name"]</th>
-                                <th scope="col">@L["Address"]</th>
-                                <th scope="col">@L["Category"]</th>
-                                <th scope="col">@L["AveragePrice"]</th>
+        else if (_error == null && _rows.Count == 0)
+        {
+            <p class="nb-hint" role="status">@L["Records:Empty"]</p>
+        }
+        else if (_rows.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Records:Time"]</th>
+                            <th scope="col">@L["Records:User"]</th>
+                            <th scope="col">@L["Name"]</th>
+                            <th scope="col">@L["Address"]</th>
+                            <th scope="col">@L["Category"]</th>
+                            <th scope="col">@L["AveragePrice"]</th>
+                            @if (IsDraw)
+                            {
+                                <th scope="col">@L["Records:Source"]</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _rows)
+                        {
+                            <tr @key="row.Id">
+                                <td class="text-nowrap nb-num">@row.RecordTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td class="text-break">@row.UserName</td>
+                                <td class="text-break">@row.ShopName</td>
+                                <td class="text-break">@(row.Address ?? "-")</td>
+                                <td>@CategoryText(row.Category)</td>
+                                <td class="nb-num">@row.AveragePrice.ToString("0.##")</td>
                                 @if (IsDraw)
                                 {
-                                    <th scope="col">@L["Records:Source"]</th>
+                                    <td class="text-nowrap">@L[row.IsTemporary ? "Records:Temporary" : "Records:Stored"]</td>
                                 }
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var row in _rows)
-                            {
-                                <tr @key="row.Id">
-                                    <td class="text-nowrap">@row.RecordTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                    <td class="text-break">@row.UserName</td>
-                                    <td class="text-break">@row.ShopName</td>
-                                    <td class="text-break">@(row.Address ?? "-")</td>
-                                    <td>@CategoryText(row.Category)</td>
-                                    <td>@row.AveragePrice.ToString("0.##")</td>
-                                    @if (IsDraw)
-                                    {
-                                        <td class="text-nowrap">@L[row.IsTemporary ? "Records:Temporary" : "Records:Stored"]</td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-            <span>@L["Records:PageInfo", _page, _total]</span>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary" disabled="@(_loading || _error != null || _page <= 1)" @onclick="PreviousAsync">@L["Records:Previous"]</button>
-                <button type="button" class="btn btn-outline-secondary" disabled="@(_loading || _error != null || (long)_page * PageSize >= _total)" @onclick="NextAsync">@L["Records:Next"]</button>
+                        }
+                    </tbody>
+                </table>
             </div>
+        }
+    </div>
+
+    <div class="nb-pagination">
+        <span class="nb-pagination__info">@L["Records:PageInfo", _page, _total]</span>
+        <div class="nb-pagination__actions">
+            <NbButton Size="NbSize.Small"
+                      Disabled="@(_loading || _error != null || _page <= 1)"
+                      Clicked="PreviousAsync">
+                @L["Records:Previous"]
+            </NbButton>
+            <NbButton Size="NbSize.Small"
+                      Disabled="@(_loading || _error != null || (long)_page * PageSize >= _total)"
+                      Clicked="NextAsync">
+                @L["Records:Next"]
+            </NbButton>
         </div>
-    </CardBody>
-</Card>
+    </div>
+</NbCard>
 
 @code {
     /// <summary>是否展示抽取记录；为 false 时展示门店新增记录。</summary>

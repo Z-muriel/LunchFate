@@ -1,0 +1,120 @@
+@using System.Linq
+@using Microsoft.Extensions.Localization
+@using LunchFate.Localization
+@using Volo.Abp.UI.Navigation
+@implements IDisposable
+@inject IMenuManager MenuManager
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<LunchFateResource> Localizer
+
+@* 侧边栏（docs/前端重构方案-Neubrutalism.md §5.1）
+   菜单数据来自 IMenuManager（StandardMenus.Main），权限过滤由 ABP 菜单系统完成。
+   移动端（< 992px）由 layout.css 转为固定抽屉，Esc 可关闭。 *@
+
+<aside class="nb-sidenav"
+       @ref="_element"
+       tabindex="-1"
+       aria-label="@Localizer["Menu:Main"]"
+       @onkeydown="OnKeyDownAsync">
+    @if (_menu is null)
+    {
+        <p class="nb-sidenav__title">@Localizer["Loading"]</p>
+    }
+    else
+    {
+        <nav class="nb-sidenav__group">
+            @foreach (var item in _menu.Items)
+            {
+                @* 注意：string 类型的参数必须写 CurrentPath="@CurrentPath"，
+                   只写 CurrentPath="CurrentPath" 会被 Razor 当成字面量字符串，
+                   导致菜单激活态与分组自动展开全部失效。 *@
+                <SideNavItem MenuItem="item" CurrentPath="@CurrentPath" OnNavigate="OnNavigateAsync" />
+            }
+        </nav>
+    }
+</aside>
+
+@code {
+    /// <summary>移动端抽屉是否展开（由外壳传入；桌面端不影响视觉）。</summary>
+    [Parameter]
+    public bool Open { get; set; }
+
+    /// <summary>请求关闭抽屉（遮罩点击或 Esc 键触发）。</summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>侧边栏根元素引用，用于抽屉展开时接管键盘焦点。</summary>
+    private ElementReference _element;
+
+    /// <summary>主菜单数据；为 null 表示尚未加载完成。</summary>
+    private ApplicationMenu? _menu;
+
+    /// <summary>上一次渲染时的抽屉状态，用于识别"刚刚打开"这一时刻。</summary>
+    private bool _wasOpen;
+
+    /// <summary>当前路由的相对路径（已归一化），用于菜单项激活判断。</summary>
+    private string CurrentPath => MenuLink.Normalize(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+
+    /// <summary>
+    /// 订阅路由变化以刷新激活态，并加载主菜单。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        _menu = await MenuManager.GetAsync(StandardMenus.Main);
+    }
+
+    /// <summary>
+    /// 抽屉展开后把焦点移到侧边栏，使 Esc 键与后续 Tab 导航可用。
+    /// </summary>
+    /// <param name="firstRender">是否为首次渲染</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Open && !_wasOpen)
+        {
+            try
+            {
+                await _element.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // 预渲染或元素尚未挂载，忽略。
+            }
+            catch (JSDisconnectedException)
+            {
+                // 渲染器已停止，忽略。
+            }
+        }
+
+        _wasOpen = Open;
+    }
+
+    /// <summary>
+    /// 路由变化时刷新组件，保证菜单项高亮跟随当前页面。
+    /// </summary>
+    /// <param name="sender">事件源</param>
+    /// <param name="args">路由变化参数</param>
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args) => StateHasChanged();
+
+    /// <summary>
+    /// 处理键盘事件：抽屉展开时按 Esc 关闭。
+    /// </summary>
+    /// <param name="args">键盘事件参数</param>
+    private async Task OnKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (Open && string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    /// <summary>
+    /// 菜单项点击后请求关闭抽屉（移动端）；桌面端外壳会忽略该状态变化。
+    /// </summary>
+    private Task OnNavigateAsync() => OnClose.InvokeAsync();
+
+    /// <summary>
+    /// 取消路由事件订阅。
+    /// </summary>
+    public void Dispose() => NavigationManager.LocationChanged -= OnLocationChanged;
+}

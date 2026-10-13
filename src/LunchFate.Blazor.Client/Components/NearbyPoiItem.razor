@@ -1,0 +1,56 @@
+@using LunchFate.Maps
+@inherits LunchFateComponentBase
+
+@* 附近搜索结果行（Components/NearbyShopSearch.razor 的子组件）
+   勾选状态由父组件按 PoiId 跨页维护，本组件只做展示与事件转发。 *@
+
+<li class="nb-list__item">
+    <div class="nb-list__main">
+        <input class="form-check-input"
+               type="checkbox"
+               aria-label="@Item.Name"
+               checked="@Selected"
+               @onchange="ToggleAsync" />
+        <div>
+            <div class="nb-list__title">@Item.Name</div>
+            <div class="nb-list__meta">@Item.Address</div>
+            @if (!string.IsNullOrWhiteSpace(Item.Tel))
+            {
+                <div class="nb-list__meta">@Item.Tel</div>
+            }
+        </div>
+    </div>
+
+    <span class="nb-badge nb-num">@FormatDistance(Item.DistanceMeters)</span>
+</li>
+
+@code {
+    /// <summary>待展示的附近 POI。</summary>
+    [Parameter, EditorRequired]
+    public NearbyPoiDto Item { get; set; } = default!;
+
+    /// <summary>该 POI 是否已被勾选（跨页累计）。</summary>
+    [Parameter]
+    public bool Selected { get; set; }
+
+    /// <summary>勾选状态变化回调，由父组件更新跨页选择集合。</summary>
+    [Parameter]
+    public EventCallback OnToggle { get; set; }
+
+    /// <summary>
+    /// 转发勾选事件。
+    /// </summary>
+    private Task ToggleAsync() => OnToggle.InvokeAsync();
+
+    /// <summary>
+    /// 格式化 POI 与当前位置的直线距离：小于 1 公里用米，否则用公里。
+    /// </summary>
+    /// <param name="distanceMeters">直线距离（米）</param>
+    /// <returns>展示用距离文本</returns>
+    private static string FormatDistance(double distanceMeters)
+    {
+        return distanceMeters < 1000
+            ? $"{distanceMeters:0} m"
+            : $"{distanceMeters / 1000:0.##} km";
+    }
+}

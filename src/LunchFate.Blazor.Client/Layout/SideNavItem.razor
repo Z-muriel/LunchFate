@@ -1,0 +1,123 @@
+@using System.Linq
+@using Volo.Abp.UI.Navigation
+@inject NavigationManager NavigationManager
+
+@* 侧边栏菜单项（Layout/SideNav.razor 的子组件，递归渲染以支持任意层级）。
+   叶子节点渲染为链接，含子项的节点渲染为可展开分组。
+   当前路由对应的项高亮；含激活项的分组自动展开。
+   菜单项的权限过滤由 ABP 的 IMenuManager 完成，此处不做任何授权判断。 *@
+
+@if (HasChildren)
+{
+    <div class="nb-sidenav__entry">
+        <button type="button"
+                class="nb-sidenav__item @(IsActive ? "nb-sidenav__item--active" : null) @(_expanded ? "nb-sidenav__item--open" : null)"
+                aria-expanded="@_expanded.ToString().ToLowerInvariant()"
+                @onclick="ToggleExpanded">
+            @IconFragment
+            <span class="nb-sidenav__text">@MenuItem.DisplayName</span>
+            <span class="nb-sidenav__caret" aria-hidden="true">&#8250;</span>
+        </button>
+
+        @if (_expanded)
+        {
+            <div class="nb-sidenav__children">
+                @foreach (var child in MenuItem.Items)
+                {
+                    @* 注意：string 类型的参数必须写 CurrentPath="@CurrentPath"，
+                       只写 CurrentPath="CurrentPath" 会被 Razor 当成字面量字符串。 *@
+                    <SideNavItem MenuItem="child" CurrentPath="@CurrentPath" OnNavigate="OnNavigate" />
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <a class="nb-sidenav__item @(IsActive ? "nb-sidenav__item--active" : null)"
+       href="@Href"
+       target="@MenuItem.Target"
+       @onclick="NavigateAsync">
+        @IconFragment
+        <span class="nb-sidenav__text">@MenuItem.DisplayName</span>
+    </a>
+}
+
+@code {
+    /// <summary>当前渲染的菜单项。</summary>
+    [Parameter, EditorRequired]
+    public ApplicationMenuItem MenuItem { get; set; } = default!;
+
+    /// <summary>当前路由的相对路径（已归一化，无前导斜杠），用于判断激活态。</summary>
+    [Parameter]
+    public string CurrentPath { get; set; } = string.Empty;
+
+    /// <summary>菜单项被点击后的回调，由外壳用于关闭移动端抽屉。</summary>
+    [Parameter]
+    public EventCallback OnNavigate { get; set; }
+
+    /// <summary>分组是否展开；由激活项状态初始化，之后由用户点击控制。</summary>
+    private bool _expanded;
+
+    /// <summary>是否已完成首次展开状态推导，避免用户手动折叠后被重新展开。</summary>
+    private bool _initialized;
+
+    /// <summary>当前菜单项是否含有子项。</summary>
+    private bool HasChildren => MenuItem.Items.Count > 0;
+
+    /// <summary>当前菜单项（或其任一后代）是否对应当前路由。</summary>
+    private bool IsActive => IsPathMatch(MenuItem) || ContainsActive(MenuItem);
+
+    /// <summary>
+    /// 归一化后的链接地址；相对地址按应用基址补全为绝对地址，
+    /// 避免像 ABP 原生实现那样用 href="" 导致首页链接跳到当前页。
+    /// </summary>
+    private string Href => MenuLink.Resolve(MenuItem.Url, NavigationManager.BaseUri);
+
+    /// <summary>图标片段：沿用 ABP 约定，只渲染 FontAwesome 图标类。</summary>
+    private RenderFragment IconFragment => @<text>
+        @if (!string.IsNullOrWhiteSpace(MenuItem.Icon) && MenuItem.Icon.StartsWith("fa", StringComparison.Ordinal))
+        {
+            <i class="@MenuItem.Icon nb-sidenav__icon" aria-hidden="true"></i>
+        }
+    </text>;
+
+    /// <summary>
+    /// 参数变化时维护展开状态：首次按激活项推导，之后只要激活项进入本子树就自动展开。
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (!_initialized)
+        {
+            _expanded = ContainsActive(MenuItem);
+            _initialized = true;
+        }
+        else if (ContainsActive(MenuItem))
+        {
+            _expanded = true;
+        }
+    }
+
+    /// <summary>切换分组的展开状态。</summary>
+    private void ToggleExpanded() => _expanded = !_expanded;
+
+    /// <summary>通知外壳菜单项已点击（移动端据此关闭抽屉）。</summary>
+    private Task NavigateAsync() => OnNavigate.InvokeAsync();
+
+    /// <summary>
+    /// 判断菜单项自身是否对应当前路由；分组项不算激活，只有叶子项才算。
+    /// </summary>
+    /// <param name="item">待判断的菜单项</param>
+    /// <returns>对应当前路由时为 true</returns>
+    private bool IsPathMatch(ApplicationMenuItem item)
+        => item.Items.Count == 0 &&
+           string.Equals(MenuLink.Normalize(item.Url), CurrentPath, StringComparison.Ordinal);
+
+    /// <summary>
+    /// 判断菜单项的任一后代是否对应当前路由（用于分组高亮与自动展开）。
+    /// </summary>
+    /// <param name="item">待判断的菜单项</param>
+    /// <returns>任一后代对应当前路由时为 true</returns>
+    private bool ContainsActive(ApplicationMenuItem item)
+        => item.Items.Any(child => IsPathMatch(child) || ContainsActive(child));
+}

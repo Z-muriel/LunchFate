@@ -11,82 +11,72 @@
 @inject NavigationManager NavigationManager
 @inherits LunchFateComponentBase
 
-@* 主页 · 午餐大转盘（需求文档 FR-W-01 ~ FR-W-06） *@
+@* 主页 · 午餐大转盘（需求文档 FR-W-01 ~ FR-W-07、FR-W-12、FR-W-13）
+   转盘标记与几何计算已抽到 Components/Wheel/LunchWheel.razor，
+   结果卡片抽到 Components/Wheel/WheelResultCard.razor；
+   本页只负责数据加载、候选合并与抽取流程编排。 *@
 
-<div class="wheel-page">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <div>
-            <h2 class="wheel-title mb-0">@L["Wheel:Title"]</h2>
-            <p class="wheel-subtitle mb-0">@L["Wheel:Subtitle"]</p>
-        </div>
-        @* FR-M-05：天气组件，服务不可用时自动隐藏 *@
-        <WeatherWidget />
-    </div>
+<div class="nb-wheel-page">
+    <NbPageHeader Title="@L["Wheel:Title"]" Subtitle="@L["Wheel:Subtitle"]">
+        <Actions>
+            @* FR-M-05：天气组件，服务不可用时自动隐藏 *@
+            <WeatherWidget />
+        </Actions>
+    </NbPageHeader>
 
     @if (_error != null)
     {
-        <div class="alert alert-danger" role="alert">@_error</div>
+        <NbAlert Color="NbColor.Danger">@_error</NbAlert>
     }
 
     @if (_loading)
     {
-        <div class="wheel-spinner" role="status"></div>
+        <NbSpinner />
     }
     else if (_shops.Count == 0)
     {
-        <div class="wheel-empty">
-            <div class="wheel-empty-icon">🍽</div>
-            <h4>@L["Wheel:Empty"]</h4>
-            <p class="text-muted">@L["Wheel:EmptyHint"]</p>
-            @if (_canCreate)
-            {
-                <button type="button" class="btn btn-primary" @onclick="GoToShops">@L["Wheel:GoToShops"]</button>
-            }
-        </div>
+        @* 空状态（FR-W-06） *@
+        <NbEmptyState Title="@L["Wheel:Empty"]"
+                      Text="@L["Wheel:EmptyHint"]"
+                      Icon="fas fa-utensils">
+            <Actions>
+                @if (_canCreate)
+                {
+                    <NbButton Color="NbColor.Primary" Size="NbSize.Large" Clicked="GoToShops">
+                        @L["Wheel:GoToShops"]
+                    </NbButton>
+                }
+            </Actions>
+        </NbEmptyState>
     }
     else
     {
-        <div class="wheel-stage">
-            <div class="wheel-pointer">▼</div>
-            <div class="wheel"
-                 style="background:@WheelBackground; transform:rotate(@RotationText); transition:@_transition;">
-                @for (var i = 0; i < _shops.Count; i++)
-                {
-                    var index = i;
-                    <div class="wheel-sector" style="transform:rotate(@SectorAngle(index));">
-                        <span class="wheel-label" title="@_shops[index].Name">@_shops[index].Name</span>
-                    </div>
-                }
-            </div>
-            <div class="wheel-hub">
-                <button type="button"
-                        class="wheel-start"
-                        disabled="@_spinning"
-                        @onclick="StartSpinAsync">
-                    @(_spinning ? L["Wheel:Spinning"] : L["Wheel:Start"])
-                </button>
-            </div>
-        </div>
+        <LunchWheel Shops="_shops"
+                    Rotation="_rotation"
+                    Transition="@_transition"
+                    Spinning="_spinning"
+                    StartText="@L["Wheel:Start"]"
+                    SpinningText="@L["Wheel:Spinning"]"
+                    OnStart="StartSpinAsync" />
+
         @if (_temporaryShops.Count > 0)
         {
-            <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-3">
-                <span class="small text-muted">@L["Wheel:NearbyCount", _temporaryShops.Count]</span>
-                <button type="button"
-                        class="btn btn-sm btn-outline-secondary"
-                        disabled="@_spinning"
-                        @onclick="ClearNearbyShops">
+            <div class="nb-wheel__nearby">
+                <span class="nb-hint">@L["Wheel:NearbyCount", _temporaryShops.Count]</span>
+                <NbButton Size="NbSize.Small" Disabled="_spinning" Clicked="ClearNearbyShops">
                     @L["Wheel:ClearNearby"]
-                </button>
+                </NbButton>
             </div>
         }
-        @if (_shops.Count > Colors.Length)
+
+        @if (_shops.Count > WheelColorCount)
         {
-            <details class="mt-3">
+            <details class="nb-wheel__list">
                 <summary>@L["Name"] (@_shops.Count)</summary>
-                <ol class="mt-2">
+                <ol>
                     @foreach (var shop in _shops)
                     {
-                        <li>@shop.Name <span class="text-muted">@shop.Address</span></li>
+                        <li>@shop.Name <span class="nb-hint">@shop.Address</span></li>
                     }
                 </ol>
             </details>
@@ -105,44 +95,19 @@
             <CloseButton Clicked="CloseResultModal" />
         </ModalHeader>
         <ModalBody>
-            @if (_result != null)
-            {
-                @* FR-M-03：有经纬度时整张餐厅卡片可点击，直接唤起高德导航到该店 *@
-                @if (CanNavigate(_result))
-                {
-                    <a class="result-card result-card-link"
-                       href="@GetNavigationUrl(_result)"
-                       target="_blank"
-                       rel="noopener"
-                       title="@L["Wheel:NavigateHint"]">
-                        @ResultCardContent
-                        <span class="result-card-action">🧭 @L["Wheel:Navigate"]</span>
-                    </a>
-                }
-                else
-                {
-                    @* 无坐标时降级为纯展示卡片，不提供无效的导航入口 *@
-                    <div class="result-card">
-                        @ResultCardContent
-                        <span class="result-card-hint">@L["Wheel:NoCoordinate"]</span>
-                    </div>
-                }
-            }
+            <WheelResultCard Shop="_result" NavigationUrl="@ResultNavigationUrl" />
         </ModalBody>
         <ModalFooter>
             @* FR-M-03：有经纬度时保留显式"去导航"按钮，跳转高德导航页 *@
-            @if (_result != null && CanNavigate(_result))
+            @if (ResultNavigationUrl != null)
             {
-                <a class="btn btn-outline-success"
-                   href="@GetNavigationUrl(_result)"
-                   target="_blank"
-                   rel="noopener">
+                <a class="nb-btn nb-btn--success" href="@ResultNavigationUrl" target="_blank" rel="noopener">
                     @L["Wheel:Navigate"]
                 </a>
             }
-            <a class="btn btn-outline-secondary" href="/records/draws">@L["Records:ViewDraws"]</a>
-            <button type="button" class="btn btn-outline-primary" disabled="@_spinning" @onclick="SpinAgainAsync">@L["Wheel:Again"]</button>
-            <button type="button" class="btn btn-primary" @onclick="CloseResultModal">@L["Wheel:Confirm"]</button>
+            <a class="nb-btn nb-btn--neutral" href="/records/draws">@L["Records:ViewDraws"]</a>
+            <NbButton Disabled="_spinning" Clicked="SpinAgainAsync">@L["Wheel:Again"]</NbButton>
+            <NbButton Color="NbColor.Primary" Clicked="CloseResultModal">@L["Wheel:Confirm"]</NbButton>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -151,12 +116,8 @@
     /// <summary>转盘动画时长（秒）；结束延迟再加 200ms 以确保过渡完全停稳。</summary>
     private const int SpinSeconds = 5;
 
-    /// <summary>扇区配色环，超过 12 个店铺时循环取色。</summary>
-    private static readonly string[] Colors =
-    [
-        "#ff8a65", "#4fc3f7", "#81c784", "#ba68c8", "#ffd54f", "#4db6ac",
-        "#f06292", "#9575cd", "#a1887f", "#64b5f6", "#aed581", "#ff7043"
-    ];
+    /// <summary>扇区配色环长度；候选数超过该值时展示完整候选清单（FR-W-07）。</summary>
+    private const int WheelColorCount = 12;
 
     /// <summary>当前转盘的完整展示候选：门店库启用门店在前、附近门店在后。</summary>
     private List<EnabledShopDto> _shops = new();
@@ -193,41 +154,17 @@
 
     /// <summary>
     /// 过渡效果始终生效，保证只有 <c>_rotation</c> 变化时触发旋转动画。
+    /// 时长必须与 <see cref="SpinSeconds"/> 一致（FR-W-02）。
     /// </summary>
     private string _transition =
         $"transform {SpinSeconds}s cubic-bezier(0.15, 0.6, 0.2, 1)";
 
     /// <summary>
-    /// 把累计旋转角格式化为 CSS 的 deg 值。
-    /// 固定两位小数并使用不变文化，避免部分区域设置输出逗号小数破坏 CSS。
+    /// 结果卡片的高德导航地址；仅当抽中门店具备完整坐标时非 null。
     /// </summary>
-    private string RotationText =>
-        _rotation.ToString("F2", CultureInfo.InvariantCulture) + "deg";
-
-    /// <summary>
-    /// 按当前启用店铺生成 conic-gradient 扇区背景；无店铺时给出统一灰色占位。
-    /// </summary>
-    private string WheelBackground
-    {
-        get
-        {
-            if (_shops.Count == 0)
-            {
-                return "conic-gradient(#e9ecef 0deg 360deg)";
-            }
-
-            var step = 360.0 / _shops.Count;
-            var stops = new List<string>();
-            for (var i = 0; i < _shops.Count; i++)
-            {
-                var from = (i * step).ToString("F2", CultureInfo.InvariantCulture);
-                var to = ((i + 1) * step).ToString("F2", CultureInfo.InvariantCulture);
-                stops.Add($"{Colors[i % Colors.Length]} {from}deg {to}deg");
-            }
-
-            return $"conic-gradient(from 0deg, {string.Join(", ", stops)})";
-        }
-    }
+    private string? ResultNavigationUrl => _result != null && CanNavigate(_result)
+        ? GetNavigationUrl(_result)
+        : null;
 
     /// <summary>
     /// 初始化：加载登录用户的大转盘数据源和空状态新增权限。
@@ -339,25 +276,6 @@
     }
 
     /// <summary>
-    /// 计算第 index 个扇区中心相对正上方的角度（顺时针，单位 deg）。
-    /// </summary>
-    /// <param name="index">扇区序号</param>
-    /// <returns>扇区中心角，供标签定位使用</returns>
-    private string SectorAngle(int index)
-    {
-        var step = 360.0 / _shops.Count;
-        var center = (index + 0.5) * step;
-        return center.ToString("F2", CultureInfo.InvariantCulture) + "deg";
-    }
-
-    /// <summary>
-    /// 取分类枚举的本地化显示文本。
-    /// </summary>
-    /// <param name="category">店铺分类</param>
-    /// <returns>本地化后的分类名</returns>
-    private string CategoryText(ShopCategory category) => L[$"Enum:ShopCategory.{(int)category}"].Value;
-
-    /// <summary>
     /// 先锁定候选并请求服务端保存抽取记录，仅用返回的索引驱动动画和快照展示结果。
     /// 指针固定在 0°（正上方），扇区 i 的中心角为 (i + 0.5) * step（顺时针），
     /// 因此需要旋转 360 * n + (360 - 中心角) 度；任何失败均解除锁定并显示本地化错误。
@@ -432,25 +350,6 @@
     /// 跳转到店铺管理页（用于空数据引导）。
     /// </summary>
     private void GoToShops() => NavigationManager.NavigateTo("/shops");
-
-    /// <summary>
-    /// 结果卡片主体（店铺名称、保存提示与分类/人均/地址）。
-    /// 抽成片段让"整卡可点击导航"与"无坐标纯展示"两种外壳复用同一套内容，避免重复标记。
-    /// </summary>
-    private RenderFragment ResultCardContent => @<text>
-        <div class="result-card-head">
-            <div class="result-card-name">@_result!.Name</div>
-            <p class="result-card-saved">@L["Records:Saved"]</p>
-        </div>
-        <dl class="row mb-0 text-start">
-            <dt class="col-4">@L["Wheel:Category"]</dt>
-            <dd class="col-8">@CategoryText(_result.Category)</dd>
-            <dt class="col-4">@L["Wheel:AveragePrice"]</dt>
-            <dd class="col-8">@_result.AveragePrice.ToString("0.##")</dd>
-            <dt class="col-4">@L["Wheel:Address"]</dt>
-            <dd class="col-8">@(_result.Address ?? "-")</dd>
-        </dl>
-    </text>;
 
     /// <summary>
     /// 判断店铺是否具备可导航的 GCJ-02 坐标。

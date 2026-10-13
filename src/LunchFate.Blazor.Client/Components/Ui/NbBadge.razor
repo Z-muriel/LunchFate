@@ -1,0 +1,26 @@
+@inherits LunchFateComponentBase
+
+@* 徽章（.nb-badge）：胶囊形 + 2px 黑边 + 硬阴影。
+   用于状态、计数、距离等短标签；状态必须同时有文字，不能只靠颜色传达。 *@
+
+<span class="@CssClass">@ChildContent</span>
+
+@code {
+    /// <summary>语义色；状态标签必须与业务语义一致（启用用 Success，停用用 Warning）。</summary>
+    [Parameter]
+    public NbColor Color { get; set; } = NbColor.Neutral;
+
+    /// <summary>附加 CSS 类。</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>徽章内容。</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>拼装最终类名：基础类 + 语义色 + 调用方附加类。</summary>
+    private string CssClass => NbCss.Join(
+        "nb-badge",
+        NbCss.Modifier("nb-badge", NbCss.ColorName(Color)),
+        Class);
+}

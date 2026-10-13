@@ -9,103 +9,97 @@
 @inject IShopAppService ShopAppService
 @inherits LunchFateComponentBase
 
-@* 店铺管理（需求文档 FR-S-01 ~ FR-S-05） *@
+@* 店铺管理（需求文档 FR-S-01 ~ FR-S-06）
+   列表用 Blazorise DataGrid 承载服务端分页/排序与跨页多选，
+   外观统一由 styles/overrides/blazorise.css 覆盖，不改其结构与列定义。
+   注意：NbCard 同时使用 <Actions> 与主体内容时，主体必须显式包在 <ChildContent> 内。 *@
 
-<Card>
-    <CardHeader>
-        <Row Class="justify-content-between">
-            <Column ColumnSize="ColumnSize.IsAuto">
-                <CardTitle>@L["Shops"]</CardTitle>
-            </Column>
-            <Column ColumnSize="ColumnSize.IsAuto">
-                @if (_canCreate)
-                {
-                    <button type="button" class="btn btn-primary" @onclick="OpenCreateModal">
-                        @L["NewShop"]
-                    </button>
-                }
-            </Column>
-        </Row>
-    </CardHeader>
-    <CardBody>
-        @* 筛选区（需求文档 FR-S-01） *@
-        <Row Class="mb-3">
-            <Column ColumnSize="ColumnSize.Is3">
-                <label class="form-label">@L["Keyword"]</label>
-                <input type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
-            </Column>
-            <Column ColumnSize="ColumnSize.Is3">
-                <label class="form-label">@L["Category"]</label>
-                <select class="form-select" @bind="_filterCategory">
-                    <option value="">@L["AnyCategory"]</option>
-                    @foreach (var category in Enum.GetValues<ShopCategory>())
-                    {
-                        <option value="@((int)category)">@CategoryText(category)</option>
-                    }
-                </select>
-            </Column>
-            <Column ColumnSize="ColumnSize.Is3">
-                <label class="form-label">@L["Status"]</label>
-                <select class="form-select" @bind="_filterEnabled">
-                    <option value="">@L["All"]</option>
-                    <option value="true">@L["Enabled"]</option>
-                    <option value="false">@L["Disabled"]</option>
-                </select>
-            </Column>
-            <Column ColumnSize="ColumnSize.Is3" Class="d-flex align-items-end gap-2">
-                <button type="button" class="btn btn-primary" @onclick="SearchAsync">@L["Search"]</button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="ResetFiltersAsync">@L["Reset"]</button>
-            </Column>
-        </Row>
-
+<NbCard Title="@L["Shops"]">
+    <Actions>
         @if (_canCreate)
         {
-            <NearbyShopSearch AllowBatchAdd="true" BatchAdded="ReloadAsync" />
+            <NbButton Color="NbColor.Primary" Clicked="OpenCreateModal">@L["NewShop"]</NbButton>
         }
+    </Actions>
 
-        @if (!string.IsNullOrEmpty(_error))
-        {
-            <div class="alert alert-danger">@_error</div>
-        }
+    <ChildContent>
+    @* 筛选区（需求文档 FR-S-01） *@
+    <div class="nb-filter-grid">
+        <div>
+            <label class="form-label" for="shopKeyword">@L["Keyword"]</label>
+            <input id="shopKeyword" type="text" class="form-control" @bind="_keyword" @bind:event="oninput" />
+        </div>
+        <div>
+            <label class="form-label" for="shopCategory">@L["Category"]</label>
+            <select id="shopCategory" class="form-select" @bind="_filterCategory">
+                <option value="">@L["AnyCategory"]</option>
+                @foreach (var category in Enum.GetValues<ShopCategory>())
+                {
+                    <option value="@((int)category)">@CategoryText(category)</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="shopStatus">@L["Status"]</label>
+            <select id="shopStatus" class="form-select" @bind="_filterEnabled">
+                <option value="">@L["All"]</option>
+                <option value="true">@L["Enabled"]</option>
+                <option value="false">@L["Disabled"]</option>
+            </select>
+        </div>
+        <div class="nb-filter-actions">
+            <NbButton Color="NbColor.Primary" Clicked="SearchAsync">@L["Search"]</NbButton>
+            <NbButton Clicked="ResetFiltersAsync">@L["Reset"]</NbButton>
+        </div>
+    </div>
 
-        @if (!string.IsNullOrEmpty(_notice))
-        {
-            <div class="alert alert-info">@_notice</div>
-        }
+    @if (_canCreate)
+    {
+        <NearbyShopSearch AllowBatchAdd="true" BatchAdded="ReloadAsync" />
+    }
 
-        @* 批量操作工具栏（需求文档 FR-S-06）：勾选跨页累计，"全选本页"只作用于当前页 *@
-        @if (_canEdit)
-        {
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <div class="d-flex flex-wrap align-items-center gap-3">
-                    <span class="small text-muted">@L["Shops:BatchSelectedCount", _selectedIds.Count]</span>
-                    <label class="small mb-0">
-                        <input type="checkbox" checked="@AllPageSelected" @onchange="ToggleSelectPageAsync" />
-                        @L["Shops:BatchSelectPage"]
-                    </label>
-                    <button type="button"
-                            class="btn btn-sm btn-link p-0"
-                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
-                            @onclick="ClearSelectionAsync">
-                        @L["Shops:BatchClearSelection"]
-                    </button>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <button type="button"
-                            class="btn btn-sm btn-outline-success"
-                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
-                            @onclick="() => AskBatchSetEnabledAsync(true)">
-                        @L["Shops:BatchEnable"]
-                    </button>
-                    <button type="button"
-                            class="btn btn-sm btn-outline-secondary"
-                            disabled="@(_selectedIds.Count == 0 || _batchBusy)"
-                            @onclick="() => AskBatchSetEnabledAsync(false)">
-                        @L["Shops:BatchDisable"]
-                    </button>
-                </div>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <NbAlert Color="NbColor.Danger">@_error</NbAlert>
+    }
+
+    @if (!string.IsNullOrEmpty(_notice))
+    {
+        <NbAlert Color="NbColor.Info">@_notice</NbAlert>
+    }
+
+    @* 批量操作工具栏（需求文档 FR-S-06）：勾选跨页累计，"全选本页"只作用于当前页 *@
+    @if (_canEdit)
+    {
+        <NbToolbar Sticky="true" Split="true">
+            <div class="nb-toolbar__group">
+                <span class="nb-hint">@L["Shops:BatchSelectedCount", _selectedIds.Count]</span>
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" checked="@AllPageSelected" @onchange="ToggleSelectPageAsync" />
+                    <span class="form-check-label">@L["Shops:BatchSelectPage"]</span>
+                </label>
+                <NbButton Size="NbSize.Small"
+                          Disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                          Clicked="ClearSelectionAsync">
+                    @L["Shops:BatchClearSelection"]
+                </NbButton>
             </div>
-        }
+            <div class="nb-toolbar__group">
+                <NbButton Size="NbSize.Small"
+                          Color="NbColor.Success"
+                          Disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                          Clicked="() => AskBatchSetEnabledAsync(true)">
+                    @L["Shops:BatchEnable"]
+                </NbButton>
+                <NbButton Size="NbSize.Small"
+                          Color="NbColor.Warning"
+                          Disabled="@(_selectedIds.Count == 0 || _batchBusy)"
+                          Clicked="() => AskBatchSetEnabledAsync(false)">
+                    @L["Shops:BatchDisable"]
+                </NbButton>
+            </div>
+        </NbToolbar>
+    }
 
         @* 服务端分页：ReadData 每次翻页/排序回调，由应用服务完成筛选、计数、排序与分页 *@
         <DataGrid TItem="ShopDto"
@@ -214,8 +208,8 @@
                 </DataGridEntityActionsColumn>
             </DataGridColumns>
         </DataGrid>
-    </CardBody>
-</Card>
+    </ChildContent>
+</NbCard>
 
 @* 新增 / 编辑弹窗 *@
 <Modal @ref="@_formModal" Centered="true">

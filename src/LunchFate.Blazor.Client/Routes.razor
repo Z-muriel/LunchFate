@@ -1,10 +1,16 @@
 @using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
 @using Volo.Abp.AspNetCore.Components.Web.Theming.Routing
 @using Microsoft.Extensions.Options
+@using NbLayout = LunchFate.Blazor.Client.Layout.MainLayout
 @inject IOptions<AbpRouterOptions> RouterOptions
+
+@* DefaultLayout 指向项目自建的应用外壳（Layout/MainLayout.razor）。
+   RedirectToLogin 仍复用 ABP BasicTheme 提供的组件，因此保留该命名空间的 using；
+   由于两个命名空间都存在 MainLayout，这里用别名 NbLayout 消除歧义。 *@
+
 <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="RouterOptions.Value.AdditionalAssemblies">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(NbLayout)">
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>

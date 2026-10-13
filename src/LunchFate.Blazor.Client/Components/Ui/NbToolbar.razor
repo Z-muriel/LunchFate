@@ -1,0 +1,31 @@
+@inherits LunchFateComponentBase
+
+@* 工具栏（.nb-toolbar）：筛选区 / 批量操作条的统一样式容器。
+   Sticky 用于需要吸顶的批量操作条（自动让开顶栏高度）。 *@
+
+<div class="@CssClass">@ChildContent</div>
+
+@code {
+    /// <summary>是否吸顶；用于批量操作条，滚动时保持可见。</summary>
+    [Parameter]
+    public bool Sticky { get; set; }
+
+    /// <summary>是否左右两端对齐（左信息、右操作）。</summary>
+    [Parameter]
+    public bool Split { get; set; }
+
+    /// <summary>附加 CSS 类。</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>工具栏内容。</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>拼装最终类名：基础类 + 修饰类 + 调用方附加类。</summary>
+    private string CssClass => NbCss.Join(
+        "nb-toolbar",
+        Sticky ? "nb-toolbar--sticky" : null,
+        Split ? "nb-toolbar--split" : null,
+        Class);
+}

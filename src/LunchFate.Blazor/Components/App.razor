@@ -13,8 +13,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @* 浏览器地址栏 / PWA 主题色，与设计令牌 --nb-primary 保持一致 *@
+    <meta name="theme-color" content="#ffd23f" />
+    @* 仅提供亮色主题，显式声明避免浏览器把表单控件渲染成暗色 *@
+    <meta name="color-scheme" content="light" />
     <title>LunchFate</title>
     <base href="/" />
+    @* 图标：SVG 为首选（矢量、可随主题色缩放），ico 作为旧浏览器兜底，apple-touch-icon 供 iOS 添加到主屏 *@
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="manifest" href="manifest.json" />
 
 
     <AbpStyles BundleName="@BlazorBasicThemeBundles.Styles.Global" WebAssemblyStyleFiles="GlobalStyles" @rendermode="InteractiveAuto" />

@@ -1,0 +1,127 @@
+/* ============================================================================
+   LunchFate 设计令牌 · 新粗野主义（Neubrutalism）
+   ----------------------------------------------------------------------------
+   唯一真源：所有视觉值只允许在此文件定义，其他样式文件只能通过 var() 引用。
+   新增颜色 / 间距 / 字号前，先确认这里没有可复用的令牌。
+   视觉规范全文见 docs/前端重构方案-Neubrutalism.md §4。
+   ============================================================================ */
+
+:root {
+    /* ---------- 基础色 ---------- */
+    --nb-ink: #000000;          /* 唯一的黑：边框、正文、硬阴影 */
+    --nb-ink-soft: #1a1a1a;     /* 次级正文 */
+    --nb-ink-mute: #4a4a4a;     /* 辅助文字（仍满足 AA 对比度） */
+    --nb-paper: #fffdf5;        /* 页面底色：米白，衬出白色卡片 */
+    --nb-surface: #ffffff;      /* 卡片 / 弹窗 / 输入框表面 */
+    --nb-surface-alt: #fff8e1;  /* 次级表面：卡片头、表头、斑马纹 */
+    --nb-rule: rgba(0, 0, 0, .35); /* 唯一允许的非纯黑边框色：表格/列表内部分隔线 */
+
+    /* ---------- 主色 ---------- */
+    --nb-primary: #ffd23f;
+    --nb-primary-hover: #ffe066;
+    --nb-primary-active: #f5c400;
+
+    /* ---------- 状态色（语义固定，禁止跨语义借用） ---------- */
+    --nb-success: #3ddc97;
+    --nb-warning: #ffb703;
+    --nb-danger: #ff4d4d;
+    --nb-info: #4cc9f0;
+
+    /* ---------- 强调色（装饰、图标底、扇区） ---------- */
+    --nb-accent-cyan: #4cc9f0;
+    --nb-accent-pink: #ff6b9d;
+    --nb-accent-orange: #ff8a3d;
+    --nb-accent-purple: #b388ff;
+    --nb-accent-lime: #c4f000;
+
+    /* ---------- 字体 ---------- */
+    --nb-font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    /* 展示字体：默认与正文字体同栈；将来自托管西文标题字体时只改这一处 */
+    --nb-font-display: var(--nb-font-sans);
+    --nb-font-mono: ui-monospace, "JetBrains Mono", Consolas, monospace;
+
+    /* ---------- 字号 ---------- */
+    --nb-fs-xs: 12px;
+    --nb-fs-sm: 14px;
+    --nb-fs-base: 16px;
+    --nb-fs-lg: 18px;
+    --nb-fs-xl: 22px;
+    --nb-fs-2xl: 28px;
+    --nb-fs-3xl: 36px;
+    --nb-fs-4xl: 48px;
+
+    /* ---------- 排版 ---------- */
+    --nb-lh-tight: 1.15;
+    --nb-lh-base: 1.6;
+    --nb-tracking-tight: -.02em;
+    --nb-weight-body: 500;   /* 正文基准字重：粗野主义整体偏粗，不用 400 */
+    --nb-weight-bold: 700;
+    --nb-weight-black: 900;
+
+    /* ---------- 边框与圆角 ---------- */
+    --nb-border-w-sm: 2px;   /* 小控件：复选框、徽章、chip */
+    --nb-border-w: 3px;      /* 默认：按钮、输入框、表格、弹窗、侧栏 */
+    --nb-border-w-lg: 4px;   /* 强调：顶栏、卡片、转盘外圈 */
+    --nb-border-color: var(--nb-ink);
+    --nb-radius-sm: 2px;
+    --nb-radius: 4px;
+    --nb-radius-pill: 999px;
+    --nb-radius-circle: 50%;
+
+    /* ---------- 硬阴影（模糊半径恒为 0，禁止 rgba 模糊阴影） ---------- */
+    --nb-shadow-xs: 2px 2px 0 var(--nb-ink);
+    --nb-shadow-sm: 3px 3px 0 var(--nb-ink);
+    --nb-shadow: 4px 4px 0 var(--nb-ink);
+    --nb-shadow-lg: 6px 6px 0 var(--nb-ink);
+    --nb-shadow-xl: 8px 8px 0 var(--nb-ink);
+
+    /* ---------- 交互位移（全站统一：hover 抬起、active 按下） ---------- */
+    --nb-lift: translate(-2px, -2px);
+    --nb-press: translate(2px, 2px);
+
+    /* ---------- 间距（4px 基准，8px 为常用步长） ---------- */
+    --nb-space-1: 4px;
+    --nb-space-2: 8px;
+    --nb-space-3: 12px;
+    --nb-space-4: 16px;
+    --nb-space-5: 24px;
+    --nb-space-6: 32px;
+    --nb-space-7: 48px;
+    --nb-space-8: 64px;
+
+    /* ---------- 动效 ---------- */
+    --nb-dur-fast: 120ms;
+    --nb-dur-base: 180ms;
+    --nb-dur-slow: 320ms;
+    --nb-ease: cubic-bezier(.2, .8, .2, 1);
+
+    /* ---------- 布局尺寸 ---------- */
+    --nb-topbar-h: 64px;
+    --nb-footer-h: 56px;        /* 页脚固定高度：侧栏高度计算依赖它 */
+    --nb-sidenav-w: 248px;
+    --nb-content-max: 1200px;
+    --nb-page-pad: clamp(16px, 4vw, 32px);
+
+    /* ---------- 层级 ---------- */
+    --nb-z-sidenav: 1020;
+    --nb-z-topbar: 1030;
+    --nb-z-overlay: 1040;
+    --nb-z-modal: 1055;      /* Bootstrap modal 为 1055，保持在其之上或同层 */
+    --nb-z-toast: 1080;
+
+    /* ---------- 转盘（FR-W-01 / FR-W-02：几何与时长由组件内联样式驱动，此处只管外观） ---------- */
+    --nb-wheel-size: min(78vw, 420px);
+    --nb-wheel-ring: var(--nb-border-w-lg);
+    --nb-wheel-hub: 34%;
+}
+
+/* 尊重系统的"减少动态效果"设置：关闭位移与旋转，保留状态变化的即时反馈。 */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --nb-lift: none;
+        --nb-press: none;
+        --nb-dur-fast: 1ms;
+        --nb-dur-base: 1ms;
+        --nb-dur-slow: 1ms;
+    }
+}

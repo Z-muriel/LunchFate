@@ -1,0 +1,74 @@
+@using LunchFate.Shops
+@inherits LunchFateComponentBase
+
+@* 抽取结果卡片（需求文档 FR-W-03、FR-M-03）
+   ----------------------------------------------------------------------------
+   有坐标时整张卡片可点击，直接唤起高德导航；无坐标时降级为纯展示卡片，
+   不提供必然无效的导航入口（FR-M-03 降级策略）。
+   两种外壳复用同一份内容片段，避免标记重复。 *@
+
+@if (Shop is not null)
+{
+    @if (CanNavigate)
+    {
+        <a class="nb-result-card nb-result-card--link"
+           href="@NavigationUrl"
+           target="_blank"
+           rel="noopener"
+           title="@L["Wheel:NavigateHint"]">
+            @CardContent
+            <span class="nb-result-card__action">
+                <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
+                @L["Wheel:Navigate"]
+            </span>
+        </a>
+    }
+    else
+    {
+        <div class="nb-result-card">
+            @CardContent
+            <span class="nb-result-card__hint">@L["Wheel:NoCoordinate"]</span>
+        </div>
+    }
+}
+
+@code {
+    /// <summary>抽中的店铺快照；为 null 时不渲染任何内容。</summary>
+    [Parameter]
+    public EnabledShopDto? Shop { get; set; }
+
+    /// <summary>
+    /// 高德导航地址；仅当店铺具备 GCJ-02 坐标时由调用方提供，
+    /// 为空表示无坐标，卡片降级为纯展示。
+    /// </summary>
+    [Parameter]
+    public string? NavigationUrl { get; set; }
+
+    /// <summary>是否具备可导航的完整坐标。</summary>
+    private bool CanNavigate =>
+        Shop is not null && Shop.Longitude.HasValue && Shop.Latitude.HasValue && !string.IsNullOrWhiteSpace(NavigationUrl);
+
+    /// <summary>
+    /// 结果卡片主体：店铺名称、保存提示与分类 / 人均 / 地址明细。
+    /// 抽成片段让"整卡可点击导航"与"无坐标纯展示"两种外壳复用同一套内容。
+    /// </summary>
+    private RenderFragment CardContent => @<text>
+        <div class="nb-result-card__name">@Shop!.Name</div>
+        <p class="nb-result-card__saved">@L["Records:Saved"]</p>
+        <dl class="nb-kv">
+            <dt class="nb-kv__key">@L["Wheel:Category"]</dt>
+            <dd class="nb-kv__value">@CategoryText(Shop.Category)</dd>
+            <dt class="nb-kv__key">@L["Wheel:AveragePrice"]</dt>
+            <dd class="nb-kv__value nb-num">@Shop.AveragePrice.ToString("0.##")</dd>
+            <dt class="nb-kv__key">@L["Wheel:Address"]</dt>
+            <dd class="nb-kv__value">@(Shop.Address ?? "-")</dd>
+        </dl>
+    </text>;
+
+    /// <summary>
+    /// 取分类枚举的本地化显示文本。
+    /// </summary>
+    /// <param name="category">店铺分类</param>
+    /// <returns>本地化后的分类名</returns>
+    private string CategoryText(ShopCategory category) => L[$"Enum:ShopCategory.{(int)category}"].Value;
+}

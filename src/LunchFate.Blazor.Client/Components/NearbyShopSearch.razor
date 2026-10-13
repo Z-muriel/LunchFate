@@ -7,173 +7,152 @@
 @inject IJSRuntime JSRuntime
 @inherits LunchFateComponentBase
 
-<Card Class="mt-4">
-    <CardHeader>
-        <CardTitle>@L["Map:NearbyTitle"]</CardTitle>
-    </CardHeader>
-    <CardBody>
-        <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">@L["Map:Keywords"]</label>
-                <input class="form-control" @bind="_keywords" @bind:event="oninput" placeholder="@L["Map:KeywordsPlaceholder"]" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">@L["Map:Types"]</label>
-                @* 默认餐饮服务：不填关键字时按类型召回附近同类店铺，避免字面关键字只命中名字里带"餐厅"的店 *@
-                <select class="form-select" @bind="_types">
-                    <option value="050000">@L["Map:TypeFood"]</option>
-                    <option value="070000">@L["Map:TypeLife"]</option>
-                    <option value="120000">@L["Map:TypeHome"]</option>
-                    <option value="">@L["Map:TypeAny"]</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">@L["Map:Radius"]</label>
-                <select class="form-select" @bind="_radius">
-                    <option value="1000">1 km</option>
-                    <option value="3000">3 km</option>
-                    <option value="5000">5 km</option>
-                    <option value="10000">10 km</option>
-                </select>
-            </div>
-            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
-                <button type="button" class="btn btn-primary" disabled="@_loading" @onclick="SearchAsync">
-                    @(_loading ? L["Map:Searching"] : L["Map:SearchNearby"])
-                </button>
-                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="LocateAsync">
-                    @L["Map:Locate"]
-                </button>
-                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="SetAsDefaultAsync">
-                    @L["Map:SetDefault"]
-                </button>
-                <button type="button" class="btn btn-outline-secondary" disabled="@_loading" @onclick="RestoreDefaultAsync">
-                    @L["Map:RestoreDefault"]
-                </button>
-            </div>
-        </div>
+@* 附近店铺搜索（需求文档 FR-W-14、FR-W-15、FR-M-04 ~ FR-M-06）
+   结果行已抽到 Components/NearbyPoiItem.razor。 *@
 
-        <div class="small text-muted mt-2">
-            @L["Map:SelectedPoint"]：@_longitude.ToString("F6"), @_latitude.ToString("F6")
-            <span class="ms-2">@L["Map:PickHint"]</span>
+<NbCard Title="@L["Map:NearbyTitle"]">
+    <div class="nb-filter-grid">
+        <div>
+            <label class="form-label" for="nearbyKeywords">@L["Map:Keywords"]</label>
+            <input id="nearbyKeywords" class="form-control" @bind="_keywords" @bind:event="oninput" placeholder="@L["Map:KeywordsPlaceholder"]" />
         </div>
-        <div class="small text-muted">
-            @L["Map:DefaultLabel"]：@_defaultLongitude.ToString("F6"), @_defaultLatitude.ToString("F6")
-            <span class="ms-1">·</span>
-            @L[_hasLocalDefault ? "Map:DefaultSourceLocal" : "Map:DefaultSourceConfig"]
-            @if (!string.IsNullOrWhiteSpace(_defaultLocationName))
+        <div>
+            <label class="form-label" for="nearbyTypes">@L["Map:Types"]</label>
+            @* 默认餐饮服务：不填关键字时按类型召回附近同类店铺，避免字面关键字只命中名字里带"餐厅"的店 *@
+            <select id="nearbyTypes" class="form-select" @bind="_types">
+                <option value="050000">@L["Map:TypeFood"]</option>
+                <option value="070000">@L["Map:TypeLife"]</option>
+                <option value="120000">@L["Map:TypeHome"]</option>
+                <option value="">@L["Map:TypeAny"]</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="nearbyRadius">@L["Map:Radius"]</label>
+            <select id="nearbyRadius" class="form-select" @bind="_radius">
+                <option value="1000">1 km</option>
+                <option value="3000">3 km</option>
+                <option value="5000">5 km</option>
+                <option value="10000">10 km</option>
+            </select>
+        </div>
+        <div class="nb-filter-actions">
+            <NbButton Color="NbColor.Primary" Disabled="_loading" Clicked="SearchAsync">
+                @(_loading ? L["Map:Searching"] : L["Map:SearchNearby"])
+            </NbButton>
+            <NbButton Disabled="_loading" Clicked="LocateAsync">@L["Map:Locate"]</NbButton>
+            <NbButton Disabled="_loading" Clicked="SetAsDefaultAsync">@L["Map:SetDefault"]</NbButton>
+            <NbButton Disabled="_loading" Clicked="RestoreDefaultAsync">@L["Map:RestoreDefault"]</NbButton>
+        </div>
+    </div>
+
+    <p class="nb-hint">
+        @L["Map:SelectedPoint"]：<span class="nb-num">@_longitude.ToString("F6"), @_latitude.ToString("F6")</span>
+        <span>@L["Map:PickHint"]</span>
+    </p>
+    <p class="nb-hint">
+        @L["Map:DefaultLabel"]：<span class="nb-num">@_defaultLongitude.ToString("F6"), @_defaultLatitude.ToString("F6")</span>
+        <span>·</span>
+        @L[_hasLocalDefault ? "Map:DefaultSourceLocal" : "Map:DefaultSourceConfig"]
+        @if (!string.IsNullOrWhiteSpace(_defaultLocationName))
+        {
+            <span>·</span>
+            @_defaultLocationName
+        }
+    </p>
+
+    <ShopMap @key="_mapKey"
+             Longitude="@_longitude"
+             Latitude="@_latitude"
+             Name="@L["Map:CurrentPoint"]"
+             MarkerSelected="OnMapPointSelectedAsync"
+             Markers="@_mapMarkers" />
+
+    @* 结果统计与"全选本页"：勾选跨页累计，全选只作用于当前页 *@
+    @if (_items.Count > 0)
+    {
+        <NbToolbar Split="true">
+            <span class="nb-hint">@L["Map:ResultCount"]：<span class="nb-num">@_total</span></span>
+            <div class="nb-toolbar__group">
+                @if (_selectedItems.Count > 0)
+                {
+                    <NbBadge Color="NbColor.Primary">@L["Map:SelectedCount", _selectedItems.Count]</NbBadge>
+                }
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" checked="@AllSelected" @onchange="ToggleAllAsync" />
+                    <span class="form-check-label">@L["Map:SelectAllPage"]</span>
+                </label>
+            </div>
+        </NbToolbar>
+    }
+
+    @if (_notice != null)
+    {
+        <NbAlert Color="NbColor.Info">
+            @_notice
+            @if (_noticeError != null)
             {
-                <span class="ms-1">·</span>
-                @_defaultLocationName
+                <div class="nb-hint">@_noticeError</div>
+            }
+        </NbAlert>
+    }
+
+    @if (_error != null)
+    {
+        <NbAlert Color="NbColor.Warning">@_error</NbAlert>
+    }
+    else if (_items.Count > 0)
+    {
+        <ul class="nb-list nb-list--scroll">
+            @foreach (var item in _items)
+            {
+                <NearbyPoiItem @key="item"
+                               Item="item"
+                               Selected="IsSelected(item)"
+                               OnToggle="() => ToggleSelectedAsync(item)" />
+            }
+        </ul>
+    }
+
+    @* 分页控件：仅在本次搜索有匹配结果时显示，页码从 1 开始 *@
+    @if (_total > 0)
+    {
+        <div class="nb-pagination">
+            <span class="nb-pagination__info">@L["Map:PageInfo", _page, TotalPages, _total]</span>
+            <div class="nb-pagination__actions">
+                <label class="nb-hint d-flex align-items-center gap-2">
+                    @L["Map:PageSize"]
+                    <select class="form-select form-select-sm nb-select--auto" disabled="@_loading" @bind="_pageSize" @bind:after="ReloadFirstPageAsync">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                    </select>
+                </label>
+                <NbButton Size="NbSize.Small" Disabled="@(_loading || _page <= 1)" Clicked="PreviousPageAsync">@L["Map:Previous"]</NbButton>
+                <NbButton Size="NbSize.Small" Disabled="@(_loading || !HasNextPage)" Clicked="NextPageAsync">@L["Map:Next"]</NbButton>
+            </div>
+        </div>
+    }
+
+    @if ((AllowTemporaryWheel || AllowBatchAdd) && (_items.Count > 0 || _selectedItems.Count > 0))
+    {
+        <div class="nb-toolbar__group">
+            @if (AllowTemporaryWheel)
+            {
+                <NbButton Disabled="@(_selectedItems.Count == 0)" Clicked="AddToWheelAsync">
+                    @L["Map:AddToWheel"] (@_selectedItems.Count)
+                </NbButton>
+            }
+            @if (AllowBatchAdd)
+            {
+                <NbButton Color="NbColor.Primary"
+                          Disabled="@(_selectedItems.Count == 0 || _batchLoading)"
+                          Clicked="BatchAddAsync">
+                    @(_batchLoading ? L["Map:Adding"] : L["Map:BatchAdd"]) (@_selectedItems.Count)
+                </NbButton>
             }
         </div>
-
-        <div class="mt-3">
-            <ShopMap @key="_mapKey"
-                     Longitude="@_longitude"
-                     Latitude="@_latitude"
-                     Name="@L["Map:CurrentPoint"]"
-                     MarkerSelected="OnMapPointSelectedAsync"
-                     Markers="@_mapMarkers" />
-        </div>
-
-        @* 结果统计与"全选本页"：勾选跨页累计，全选只作用于当前页 *@
-        @if (_items.Count > 0)
-        {
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                <span class="small text-muted">@L["Map:ResultCount"]：@_total</span>
-                <div class="d-flex align-items-center gap-3">
-                    @if (_selectedItems.Count > 0)
-                    {
-                        <span class="small text-primary fw-bold">@L["Map:SelectedCount", _selectedItems.Count]</span>
-                    }
-                    <label class="small mb-0">
-                        <input type="checkbox" checked="@AllSelected" @onchange="ToggleAllAsync" />
-                        @L["Map:SelectAllPage"]
-                    </label>
-                </div>
-            </div>
-        }
-
-        @if (_notice != null)
-        {
-            <div class="alert alert-info mt-3 mb-0">
-                @_notice
-                @if (_noticeError != null)
-                {
-                    <div class="small mt-1">@_noticeError</div>
-                }
-            </div>
-        }
-
-        @if (_error != null)
-        {
-            <div class="alert alert-warning mt-3 mb-0">@_error</div>
-        }
-        else if (_items.Count > 0)
-        {
-            <div class="list-group mt-3" style="max-height:420px;overflow-y:auto;">
-                @foreach (var item in _items)
-                {
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="d-flex gap-2">
-                            <input class="form-check-input mt-1"
-                                   type="checkbox"
-                                   checked="@IsSelected(item)"
-                                   @onchange="() => ToggleSelectedAsync(item)" />
-                            <div>
-                            <div class="fw-bold">@item.Name</div>
-                            <div class="small text-muted">@item.Address</div>
-                            @if (!string.IsNullOrWhiteSpace(item.Tel))
-                            {
-                                <div class="small text-muted">@item.Tel</div>
-                            }
-                            </div>
-                        </div>
-                        <span class="badge text-bg-light">@FormatDistance(item.DistanceMeters)</span>
-                    </div>
-                }
-            </div>
-        }
-
-        @* 分页控件：仅在本次搜索有匹配结果时显示，页码从 1 开始 *@
-        @if (_total > 0)
-        {
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                <span class="small text-muted">@L["Map:PageInfo", _page, TotalPages, _total]</span>
-                <div class="d-flex align-items-center gap-2">
-                    <label class="small text-muted mb-0 d-flex align-items-center gap-1">
-                        @L["Map:PageSize"]
-                        <select class="form-select form-select-sm w-auto" disabled="@_loading" @bind="_pageSize" @bind:after="ReloadFirstPageAsync">
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                        </select>
-                    </label>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_loading || _page <= 1)" @onclick="PreviousPageAsync">@L["Map:Previous"]</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_loading || !HasNextPage)" @onclick="NextPageAsync">@L["Map:Next"]</button>
-                </div>
-            </div>
-        }
-
-        @if ((AllowTemporaryWheel || AllowBatchAdd) && (_items.Count > 0 || _selectedItems.Count > 0))
-        {
-            <div class="mt-2 d-flex gap-2">
-                @if (AllowTemporaryWheel)
-                {
-                    <button type="button" class="btn btn-outline-primary" disabled="@(_selectedItems.Count == 0)" @onclick="AddToWheelAsync">
-                        @L["Map:AddToWheel"] (@_selectedItems.Count)
-                    </button>
-                }
-                @if (AllowBatchAdd)
-                {
-                    <button type="button" class="btn btn-primary" disabled="@(_selectedItems.Count == 0 || _batchLoading)" @onclick="BatchAddAsync">
-                        @(_batchLoading ? L["Map:Adding"] : L["Map:BatchAdd"]) (@_selectedItems.Count)
-                    </button>
-                }
-            </div>
-        }
-    </CardBody>
-</Card>
+    }
+</NbCard>
 
 @code {
     /// <summary>读不到服务端默认位置时使用的兜底坐标（广州中山大学南校园）。</summary>
@@ -697,14 +676,6 @@
         {
             // 同上：渲染器已停止。
         }
-    }
-
-    /// <summary>格式化 POI 与当前位置的直线距离。</summary>
-    private static string FormatDistance(double distanceMeters)
-    {
-        return distanceMeters < 1000
-            ? $"{distanceMeters:0} m"
-            : $"{distanceMeters / 1000:0.##} km";
     }
 
     /// <summary>浏览器返回的当前位置。</summary>

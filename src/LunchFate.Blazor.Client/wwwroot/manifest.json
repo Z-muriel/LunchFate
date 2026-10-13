@@ -1,21 +1,24 @@
 {
   "name": "LunchFate",
   "short_name": "LunchFate",
+  "description": "午餐命运 · 用大转盘决定中午吃什么",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "background_color": "#fffdf5",
+  "theme_color": "#ffd23f",
   "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     }
   ]
 }

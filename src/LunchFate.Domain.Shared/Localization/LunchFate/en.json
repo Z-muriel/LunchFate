@@ -55,6 +55,12 @@
     "Reset": "Reset",
     "Name": "Name",
 
+    "Close": "Close",
+    "Loading": "Loading…",
+    "Breadcrumb": "Breadcrumb",
+    "Menu:Main": "Main menu",
+    "Menu:ToggleNav": "Toggle navigation",
+
     "Shops": "Shops",
     "NewShop": "New shop",
     "ShopDeletionConfirmationMessage": "Are you sure you want to delete the shop '{0}'?",

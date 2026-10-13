@@ -1,0 +1,130 @@
+@using System.Globalization
+@using System.Linq
+@using LunchFate.Shops
+@inherits LunchFateComponentBase
+
+@* 转盘本体（需求文档 FR-W-01 ~ FR-W-03、FR-W-07、FR-W-12）
+   ----------------------------------------------------------------------------
+   几何与动画参数逐行保留自原 Home.razor，重构只改标记类名与外观：
+   - 扇区背景用 conic-gradient，按 Shops 顺序均分 360°（不截断候选，FR-W-07）
+   - 扇区 i 的中心角 = (i + 0.5) * step，指针固定在正上方 0°
+   - 旋转角由调用方计算：turns * 360 + (360 - 中心角)
+
+   ⚠️ 禁止改动上述计算与 Shops 顺序：服务端返回的 WinnerIndex 按同一顺序对应扇区，
+      改动会导致"指针所指"与"弹窗结果"不一致。 *@
+
+<div class="nb-wheel-stage">
+    <div class="nb-wheel__pointer" aria-hidden="true"></div>
+
+    <div class="nb-wheel"
+         style="background:@WheelBackground; transform:rotate(@RotationText); transition:@Transition;">
+        @for (var i = 0; i < Shops.Count; i++)
+        {
+            var index = i;
+            <div class="nb-wheel__sector" style="transform:rotate(@SectorAngle(index));">
+                <span class="nb-wheel__label" title="@Shops[index].Name">@Shops[index].Name</span>
+            </div>
+        }
+    </div>
+
+    <div class="nb-wheel__hub">
+        <button type="button"
+                class="nb-wheel__start"
+                disabled="@Spinning"
+                @onclick="OnStartAsync">
+            @(Spinning ? SpinningText : StartText)
+        </button>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 扇区配色环（12 色，新粗野主义高饱和色板）。
+    /// 超过 12 个门店时循环取色；相邻扇区已错开明度与色相。
+    /// </summary>
+    private static readonly string[] Colors =
+    [
+        "#ffd23f", "#4cc9f0", "#ff6b9d", "#3ddc97", "#ff8a3d", "#b388ff",
+        "#ff4d4d", "#c4f000", "#00b4d8", "#ff9e00", "#7b61ff", "#ffb703"
+    ];
+
+    /// <summary>
+    /// 转盘展示候选，顺序必须与服务端抽取候选一致：
+    /// 门店库启用门店在前、已加入的附近门店在后（FR-W-12）。
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EnabledShopDto> Shops { get; set; } = [];
+
+    /// <summary>累计旋转角度（度），由调用方按服务端返回的获胜索引计算。</summary>
+    [Parameter]
+    public double Rotation { get; set; }
+
+    /// <summary>CSS transition 值；由调用方提供以保证动画时长与等待时长一致。</summary>
+    [Parameter]
+    public string Transition { get; set; } = "none";
+
+    /// <summary>是否正在旋转；旋转期间锁定中心按钮。</summary>
+    [Parameter]
+    public bool Spinning { get; set; }
+
+    /// <summary>中心按钮的待机文案。</summary>
+    [Parameter]
+    public string StartText { get; set; } = string.Empty;
+
+    /// <summary>中心按钮的旋转中文案。</summary>
+    [Parameter]
+    public string SpinningText { get; set; } = string.Empty;
+
+    /// <summary>点击中心按钮开始抽取。</summary>
+    [Parameter]
+    public EventCallback OnStart { get; set; }
+
+    /// <summary>
+    /// 把累计旋转角格式化为 CSS 的 deg 值。
+    /// 固定两位小数并使用不变文化，避免部分区域设置输出逗号小数破坏 CSS。
+    /// </summary>
+    private string RotationText =>
+        Rotation.ToString("F2", CultureInfo.InvariantCulture) + "deg";
+
+    /// <summary>
+    /// 按当前候选生成 conic-gradient 扇区背景；无候选时给出统一占位色。
+    /// </summary>
+    private string WheelBackground
+    {
+        get
+        {
+            if (Shops.Count == 0)
+            {
+                return "conic-gradient(#fff8e1 0deg 360deg)";
+            }
+
+            var step = 360.0 / Shops.Count;
+            var stops = new List<string>();
+            for (var i = 0; i < Shops.Count; i++)
+            {
+                var from = (i * step).ToString("F2", CultureInfo.InvariantCulture);
+                var to = ((i + 1) * step).ToString("F2", CultureInfo.InvariantCulture);
+                stops.Add($"{Colors[i % Colors.Length]} {from}deg {to}deg");
+            }
+
+            return $"conic-gradient(from 0deg, {string.Join(", ", stops)})";
+        }
+    }
+
+    /// <summary>
+    /// 计算第 index 个扇区中心相对正上方的角度（顺时针，单位 deg）。
+    /// </summary>
+    /// <param name="index">扇区序号</param>
+    /// <returns>扇区中心角，供标签定位使用</returns>
+    private string SectorAngle(int index)
+    {
+        var step = 360.0 / Shops.Count;
+        var center = (index + 0.5) * step;
+        return center.ToString("F2", CultureInfo.InvariantCulture) + "deg";
+    }
+
+    /// <summary>
+    /// 转发中心按钮点击到调用方的抽取逻辑。
+    /// </summary>
+    private Task OnStartAsync() => OnStart.InvokeAsync();
+}

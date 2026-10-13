@@ -187,12 +187,12 @@ public class LunchFateBlazorModule : AbpModule
             // Blazor Web App
             options.Parameters.InteractiveAuto = true;
 
-            // MVC UI
+            // MVC UI（登录页 / 错误页）：只需要令牌、基础与覆盖层
             options.StyleBundles.Configure(
                 BasicThemeBundles.Styles.Global,
                 bundle =>
                 {
-                    bundle.AddFiles("/global-styles.css");
+                    bundle.AddFiles(LunchFateStyleBundleContributor.MvcStyleFiles);
                 }
             );
 
@@ -209,12 +209,12 @@ public class LunchFateBlazorModule : AbpModule
                 }
             );
 
-            // Blazor UI
+            // Blazor UI（服务端渲染首屏）：完整样式层，与 WASM 侧保持同一顺序
             options.StyleBundles.Configure(
                 BlazorBasicThemeBundles.Styles.Global,
                 bundle =>
                 {
-                    bundle.AddFiles("/global-styles.css");
+                    bundle.AddFiles(LunchFateStyleBundleContributor.BlazorStyleFiles);
                 }
             );
         });

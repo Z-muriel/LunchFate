@@ -1,21 +1,25 @@
 @using LunchFate.Maps
-@* 天气组件（FR-M-05）：显示当日天气，雨雪天文案引导选近的店 *@
 @inject IMapAppService MapAppService
 @inherits LunchFateComponentBase
 
+@* 天气组件（FR-M-05）：显示当日天气，雨雪天文案引导选近的店。
+   服务不可用时静默隐藏，不阻断转盘主流程。 *@
+
 @if (_loading)
 {
-    <div class="weather-widget text-muted small">@L["Weather:Loading"]</div>
+    <span class="nb-weather nb-hint">@L["Weather:Loading"]</span>
 }
 else if (_weather != null)
 {
-    <div class="weather-widget small">
-        <span class="me-1">@_weather.Weather @_weather.Temperature°C</span>
+    <span class="nb-weather @(IsRainy(_weather.Weather) ? "nb-weather--rain" : null)">
+        <i class="fas @(IsRainy(_weather.Weather) ? "fa-cloud-rain" : "fa-sun")"
+           aria-hidden="true"></i>
+        <span class="nb-num">@_weather.Weather @_weather.Temperature°C</span>
         @if (IsRainy(_weather.Weather))
         {
-            <span class="text-info ms-1" title="@L["Weather:RainSnowTitle"]">🌧 @L["Weather:NearbyHint"]</span>
+            <span title="@L["Weather:RainSnowTitle"]">@L["Weather:NearbyHint"]</span>
         }
-    </div>
+    </span>
 }
 
 @code {

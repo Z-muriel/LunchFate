@@ -1,0 +1,228 @@
+/* ============================================================================
+   ABP 框架页覆盖层：MVC 外壳（登录页 / 错误页）与框架内置页的残留样式对齐
+   ----------------------------------------------------------------------------
+   覆盖范围刻意保持克制：只处理底色、外壳、卡片、按钮、表单等高频元素，
+   不追求与自研页面像素级一致（见 docs/前端重构方案-Neubrutalism.md 风险 R7）。
+   仅覆盖"外观"，不改任何结构或尺寸计算。
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   MVC 外壳（AbpAspNetCoreMvcUiBasicTheme）
+   --------------------------------------------------------------------------- */
+
+body.abp-application-layout {
+    background-color: var(--nb-paper);
+    color: var(--nb-ink);
+}
+
+/* 顶部导航条：白底 + 底部粗黑边 + 硬阴影，与 Blazor 顶栏一致 */
+.navbar {
+    padding: var(--nb-space-2) var(--nb-space-4);
+    background-color: var(--nb-surface);
+    border-bottom: var(--nb-border-w-lg) solid var(--nb-ink);
+    box-shadow: 0 4px 0 var(--nb-ink);
+}
+
+.navbar-brand {
+    color: var(--nb-ink);
+    font-family: var(--nb-font-display);
+    font-size: var(--nb-fs-xl);
+    font-weight: var(--nb-weight-black);
+    letter-spacing: var(--nb-tracking-tight);
+    text-decoration: none;
+}
+
+.navbar-brand:hover {
+    background-color: transparent;
+    color: var(--nb-ink);
+}
+
+.navbar-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nb-space-2);
+    min-height: 40px;
+    padding: var(--nb-space-1) var(--nb-space-3);
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-pill);
+    box-shadow: var(--nb-shadow-xs);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: none;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+}
+
+.navbar-toggler {
+    min-height: 44px;
+    padding: var(--nb-space-1) var(--nb-space-3);
+    background-color: var(--nb-primary);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius);
+    box-shadow: var(--nb-shadow-xs);
+}
+
+/* ---------------------------------------------------------------------------
+   ABP 主题把顶栏文字刷成白色 —— 必须覆盖回黑字
+   ---------------------------------------------------------------------------
+   Volo.Abp.AspNetCore.Components.Web.BasicTheme 的 theme.css 里有：
+     .navbar-nav > .nav-item > .nav-link,
+     .navbar-nav > .nav-item > .dropdown > .nav-link { color: #fff !important; }
+     .navbar-nav > .nav-item > div > button { color: #fff; }
+
+   本项目顶栏是"白底 + 黑边"的胶囊按钮，白字等于完全不可见
+   —— 表现为右上角用户菜单与语言选择器"消失"、只剩一个空胶囊。
+   这里用同级或更高特异性 + !important 覆盖，并限定在 .nb-topbar 内以免影响其他位置。 */
+.nb-topbar .navbar-nav .nav-link,
+.nb-topbar .navbar-nav .dropdown-toggle,
+.nb-topbar .navbar-nav button,
+.nb-topbar .navbar-nav a {
+    color: var(--nb-ink) !important;
+}
+
+/* 顶栏下拉菜单定位。
+   实测 ABP 产出的标记有两种形态：
+     用户菜单   ：.nav-item > .dropdown > button.btn.dropdown-toggle + .dropdown-menu
+     语言选择器 ：.nav-item > a.nav-link.dropdown-toggle + .dropdown-menu（**没有 .dropdown 包裹**）
+   第二种缺少定位父级，菜单会退化为相对 .nb-topbar 定位，
+   展开瞬间看起来就像"按钮被挤动了"。因此给 .nav-item 也加上定位上下文，
+   并只做最小干预（不定 position/top，交给 Bootstrap/Blazorise 自己的规则）。 */
+.nb-topbar .navbar-nav > .nav-item,
+.nb-topbar .dropdown {
+    position: relative;
+}
+
+.nb-topbar .dropdown-menu {
+    z-index: var(--nb-z-overlay);
+}
+
+/* MVC 主题的侧边栏（若启用）：与 Blazor 侧栏同一套视觉 */
+.sidebar {
+    background-color: var(--nb-surface);
+    border-right: var(--nb-border-w-lg) solid var(--nb-ink);
+}
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--nb-space-3);
+    min-height: 44px;
+    padding: var(--nb-space-2) var(--nb-space-3);
+    border: var(--nb-border-w) solid transparent;
+    border-radius: var(--nb-radius);
+    color: var(--nb-ink);
+    font-size: var(--nb-fs-sm);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: none;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--nb-surface-alt);
+    border-color: var(--nb-ink);
+    color: var(--nb-ink);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--nb-primary);
+    border-color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-sm);
+}
+
+/* 页脚 */
+.footer,
+footer.footer {
+    padding: var(--nb-space-4) var(--nb-page-pad);
+    background-color: var(--nb-surface);
+    border-top: var(--nb-border-w) solid var(--nb-ink);
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-xs);
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   登录页
+   --------------------------------------------------------------------------- */
+
+.login-page,
+.abp-login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--nb-space-5) var(--nb-page-pad);
+    background-color: var(--nb-paper);
+}
+
+.login-page .card,
+.abp-login-page .card {
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--nb-shadow-xl);
+}
+
+/* 登录表单的字段间距与主按钮 */
+.login-page .card .card-body > * + *,
+.abp-login-page .card .card-body > * + * {
+    margin-top: var(--nb-space-3);
+}
+
+.login-page .btn-primary,
+.abp-login-page .btn-primary {
+    width: 100%;
+    min-height: 52px;
+    font-size: var(--nb-fs-base);
+}
+
+/* ---------------------------------------------------------------------------
+   ABP 框架内置页（Identity 用户管理 / 租户管理 / 设置管理）
+   这些页面由 Blazorise 渲染，主体样式已由 overrides/blazorise.css 覆盖，
+   这里只处理它们自带的容器与工具栏间距。
+   --------------------------------------------------------------------------- */
+
+.abp-page-content,
+.page-content {
+    padding: var(--nb-space-4) 0;
+}
+
+/* 页面级进度条：贴在顶栏下方 */
+.abp-page-progress,
+.abp-progress-bar,
+#abp-page-progress {
+    z-index: var(--nb-z-toast);
+}
+
+/* 框架自带的消息容器 */
+.abp-message-alert,
+.abp-notification-alert {
+    margin-bottom: var(--nb-space-4);
+}
+
+/* ---------------------------------------------------------------------------
+   框架图标按钮 / 工具按钮（ABP 页面工具栏常见）
+   --------------------------------------------------------------------------- */
+
+.btn-icon,
+.abp-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background-color: var(--nb-surface);
+    border: var(--nb-border-w-sm) solid var(--nb-ink);
+    border-radius: var(--nb-radius-sm);
+    box-shadow: var(--nb-shadow-xs);
+    color: var(--nb-ink);
+}
+
+.btn-icon:hover,
+.abp-icon-button:hover {
+    background-color: var(--nb-primary);
+    color: var(--nb-ink);
+}

@@ -27,6 +27,7 @@ abp install-libs                                              # after clone: www
 
 ## Layout / entry points
 
+- **前端 UI 规范见 `src/LunchFate.Blazor/AGENT.md`**（Blazor / Blazor.Client 的目录结构、样式体系、设计令牌、组件规范、已知坑清单）；改动 `src/LunchFate.Blazor*` 下任何 UI 代码前先读它。视觉基线与实施记录见 `docs/前端重构方案-Neubrutalism.md`。
 - Layers in `src/`: Domain.Shared → Domain → Application.Contracts → Application → HttpApi / HttpApi.Client → EntityFrameworkCore → Integration → Blazor (+ Blazor.Client) → DbMigrator.
 - `src/LunchFate.Integration` is the only place allowed to talk to third-party HTTP services (currently 高德/Gaode). `LunchFateApplicationModule` declares `DependsOn(typeof(LunchFateIntegrationModule))` because `ShopAppService` injects `IGaodeMapService` — keep that dependency where the consumer lives, not only on the host.
 - Web entry: `src/LunchFate.Blazor/Program.cs` → `LunchFateBlazorModule`. Migration/console entry: `src/LunchFate.DbMigrator/Program.cs`.

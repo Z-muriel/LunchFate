@@ -1,0 +1,235 @@
+/* ============================================================================
+   基础层：reset、排版、链接、焦点、滚动条、错误提示、加载态
+   依赖 tokens.css，必须在其之后加载。
+   ============================================================================ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    /* 移动端横竖屏切换时不要自动放大字号 */
+    -webkit-text-size-adjust: 100%;
+}
+
+html body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--nb-paper);
+    color: var(--nb-ink);
+    font-family: var(--nb-font-sans);
+    font-size: var(--nb-fs-base);
+    font-weight: var(--nb-weight-body);
+    line-height: var(--nb-lh-base);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------------
+   排版
+   元素级规则统一加 `html` 前缀（特异性 0-0-2），
+   以便在 WASM 合并包（/global.css）里无论与 Bootstrap 谁先谁后都能生效。
+   --------------------------------------------------------------------------- */
+
+html h1, html h2, html h3, html h4, html h5, html h6 {
+    margin: 0 0 var(--nb-space-3);
+    font-family: var(--nb-font-display);
+    font-weight: var(--nb-weight-black);
+    line-height: var(--nb-lh-tight);
+    letter-spacing: var(--nb-tracking-tight);
+    color: var(--nb-ink);
+}
+
+html h1 { font-size: var(--nb-fs-3xl); }
+html h2 { font-size: var(--nb-fs-2xl); }
+html h3 { font-size: var(--nb-fs-xl); }
+html h4 { font-size: var(--nb-fs-lg); }
+html h5 { font-size: var(--nb-fs-base); }
+html h6 { font-size: var(--nb-fs-sm); }
+
+html p {
+    margin: 0 0 var(--nb-space-3);
+}
+
+html small,
+html .small {
+    font-size: var(--nb-fs-sm);
+}
+
+html strong,
+html b {
+    font-weight: var(--nb-weight-bold);
+}
+
+html code, html kbd, html pre, html samp {
+    font-family: var(--nb-font-mono);
+    font-size: .95em;
+}
+
+html hr {
+    height: var(--nb-border-w-sm);
+    margin: var(--nb-space-5) 0;
+    border: 0;
+    background-color: var(--nb-ink);
+    opacity: .25;
+}
+
+/* 数字统一等宽，避免表格与统计数字跳动 */
+td, th,
+.nb-num,
+input[type="number"],
+input[type="date"] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   链接
+   --------------------------------------------------------------------------- */
+
+html a {
+    color: var(--nb-ink);
+    font-weight: var(--nb-weight-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
+html a:hover {
+    color: var(--nb-ink);
+    background-color: var(--nb-primary);
+}
+
+html a:focus-visible {
+    outline: var(--nb-border-w) solid var(--nb-ink);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   焦点可见环：全站统一，禁止用 outline: none 去掉
+   --------------------------------------------------------------------------- */
+
+:focus-visible {
+    outline: var(--nb-border-w) solid var(--nb-ink);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   滚动条（WebKit）：粗黑描边风格
+   --------------------------------------------------------------------------- */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nb-ink) var(--nb-surface-alt);
+}
+
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background-color: var(--nb-surface-alt);
+    border-left: var(--nb-border-w-sm) solid var(--nb-ink);
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--nb-ink);
+    border: 2px solid var(--nb-surface-alt);
+}
+
+/* ---------------------------------------------------------------------------
+   辅助类（尽量少用；仅在无现成组件时使用）
+   --------------------------------------------------------------------------- */
+
+.nb-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.nb-hint {
+    color: var(--nb-ink-mute);
+    font-size: var(--nb-fs-sm);
+}
+
+.nb-visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 文本语义色：与状态色语义一致 */
+.nb-text-success { color: var(--nb-ink); }
+.nb-text-danger { color: var(--nb-danger); }
+.nb-text-mute { color: var(--nb-ink-mute); }
+
+/* ---------------------------------------------------------------------------
+   Blazor 未处理异常提示条
+   --------------------------------------------------------------------------- */
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: var(--nb-z-toast);
+    width: 100%;
+    padding: var(--nb-space-3) var(--nb-space-5);
+    background: var(--nb-danger);
+    color: var(--nb-ink);
+    font-weight: var(--nb-weight-bold);
+    border-top: var(--nb-border-w-lg) solid var(--nb-ink);
+    box-shadow: 0 -4px 0 var(--nb-ink);
+}
+
+#blazor-error-ui .reload {
+    margin-left: var(--nb-space-3);
+    color: var(--nb-ink);
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    top: var(--nb-space-2);
+    right: var(--nb-space-3);
+    cursor: pointer;
+    font-size: var(--nb-fs-lg);
+    line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   应用启动加载态（WASM 首屏；ABP 模板在应用挂载前显示）
+   --------------------------------------------------------------------------- */
+
+.loader {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--nb-paper);
+}
+
+.loader::after {
+    content: "";
+    width: 56px;
+    height: 56px;
+    background-color: var(--nb-primary);
+    border: var(--nb-border-w-lg) solid var(--nb-ink);
+    box-shadow: var(--nb-shadow-lg);
+    animation: nb-loader-turn 1.1s steps(8, end) infinite;
+}
+
+@keyframes nb-loader-turn {
+    to { transform: rotate(360deg); }
+}
+
+/* 应用已挂载后隐藏首屏 loading 占位（ABP 模板行为，保持原样） */
+#ApplicationContainer > div:first-child:not(:only-child) {
+    display: none !important;
+}
