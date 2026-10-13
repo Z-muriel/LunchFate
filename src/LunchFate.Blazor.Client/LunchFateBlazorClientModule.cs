@@ -13,6 +13,7 @@ using OpenIddict.Abstractions;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.Autofac.WebAssembly;
+using Volo.Abp.Http.Client;
 using Volo.Abp.Mapperly;
 using Volo.Abp.Modularity;
 using Volo.Abp.UI.Navigation;
@@ -53,6 +54,13 @@ public class LunchFateBlazorClientModule : AbpModule
         var builder = context.Services.GetSingletonInstance<WebAssemblyHostBuilder>();
 
         ConfigureAuthentication(builder);
+
+        // 动态 HTTP 客户端（AbpMvcClient 等）基址跟随当前站点，保持同源：
+        // 写死开发地址会让发布部署（如 http://localhost:5000）把请求打到不存在的端口，
+        // ABP WASM 模块初始化直接失败、页面卡死。这里必须显式赋值，留空会让请求没有基址。
+        Configure<AbpRemoteServiceOptions>(options =>
+            options.RemoteServices["Default"] = new RemoteServiceConfiguration { BaseUrl = environment.BaseAddress });
+
         ConfigureHttpClient(context, environment);
         ConfigureBlazorise(context);
         ConfigureRouter(context);

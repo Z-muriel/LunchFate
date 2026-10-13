@@ -27,6 +27,7 @@ using Volo.Abp;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.AspNetCore.Mvc;
+using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
@@ -151,6 +152,14 @@ public class LunchFateBlazorModule : AbpModule
         ConfigureBlazorise(context);
         ConfigureRouter(context);
         ConfigureMenu(context);
+
+        // http 部署下 ABP 签发的 XSRF-TOKEN cookie（AbpAntiForgeryOptions.TokenCookie 硬编码 SameSite=None）
+        // 因缺 Secure 属性会被 Chrome 丢弃：WASM 读不到 token → 发不出 RequestVerificationToken 头 → 所有 POST 400。
+        // 已把 WASM 基址改为同源，无需跨站 cookie，改用 Lax（http/https 下均合法）。
+        Configure<AbpAntiForgeryOptions>(options =>
+        {
+            options.TokenCookie.SameSite = SameSiteMode.Lax;
+        });
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
