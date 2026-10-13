@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 using Serilog.Events;
 
@@ -12,6 +14,13 @@ public class Program
 {
     public async static Task<int> Main(string[] args)
     {
+        var isWindowsService = WindowsServiceHelpers.IsWindowsService();
+        if (isWindowsService)
+        {
+            // Windows 服务默认工作目录可能是 System32，固定到发布目录以保证相对路径日志可写。
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+        }
+
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Async(c => c.File("Logs/logs.txt"))
             .WriteTo.Async(c => c.Console())
@@ -21,6 +30,11 @@ public class Program
         {
             Log.Information("Starting web host.");
             var builder = WebApplication.CreateBuilder(args);
+            if (isWindowsService)
+            {
+                builder.Host.UseWindowsService();
+            }
+
             builder.Host
                 .AddAppSettingsSecretsJson()
                 .UseAutofac()
