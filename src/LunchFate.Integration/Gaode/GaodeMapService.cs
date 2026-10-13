@@ -73,6 +73,14 @@ public class GaodeMapService : IGaodeMapService
             var response = await _httpClient.GetFromJsonAsync<GaodeGeocodeResponse>(url, JsonOptions, cancellationToken);
             if (response?.Geocodes is null || response.Geocodes.Count == 0)
             {
+                // status=0 时（如 QPS 限流 CUQPS_HAS_EXCEEDED_THE_LIMIT）也走这里，
+                // 不记日志会让"坐标丢失"在 logs.txt 里查无痕迹。
+                _logger.LogWarning(
+                    "地理编码无结果：{Address} / status={Status} info={Info} infocode={InfoCode}",
+                    address,
+                    response?.Status,
+                    response?.Info,
+                    response?.InfoCode);
                 return null;
             }
 
@@ -145,7 +153,23 @@ public class GaodeMapService : IGaodeMapService
 
             // 2. 发送请求并解析响应
             var response = await _httpClient.GetFromJsonAsync<GaodeAroundResponse>(url, JsonOptions, cancellationToken);
-            if (response?.Pois is null)
+
+            // status!=1（限流 CUQPS_HAS_EXCEEDED_THE_LIMIT、Key 无效等）时高德连 pois 字段都不返回；
+            // 若按"pois 为 null"当成空结果页，故障会被前端伪装成"附近没有匹配的店铺"，且日志无痕迹。
+            if (response is null || response.Status != "1")
+            {
+                _logger.LogWarning(
+                    "周边搜索返回非成功状态：status={Status} info={Info} infocode={InfoCode} keywords={Keywords} types={Types}",
+                    response?.Status,
+                    response?.Info,
+                    response?.InfoCode,
+                    keywords,
+                    types);
+                return new PoiSearchPage { Failed = true };
+            }
+
+            // status=1 但 pois 缺失按成功空页处理（高德"查无结果"时仍返回 status=1）。
+            if (response.Pois is null)
             {
                 return new PoiSearchPage();
             }
@@ -190,7 +214,21 @@ public class GaodeMapService : IGaodeMapService
 
             // 2. 发送请求并解析响应
             var response = await _httpClient.GetFromJsonAsync<GaodeWeatherResponse>(url, JsonOptions, cancellationToken);
-            if (response?.Lives is null || response.Lives.Count == 0)
+
+            // status!=1 时高德不返回 lives；不记日志会让"天气组件静默隐藏"无从排查。
+            if (response is null || response.Status != "1")
+            {
+                _logger.LogWarning(
+                    "天气查询返回非成功状态：status={Status} info={Info} infocode={InfoCode} adcode={Adcode}",
+                    response?.Status,
+                    response?.Info,
+                    response?.InfoCode,
+                    adcode);
+                return null;
+            }
+
+            // status=1 但 lives 缺失或为空时按无天气处理，不视为故障。
+            if (response.Lives is null || response.Lives.Count == 0)
             {
                 return null;
             }
